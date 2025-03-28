@@ -1,0 +1,131 @@
+.tp-partners-area {
+  background-color: #f8f9fa;
+  padding: 80px 0;
+}
+
+.tp-partner-item {
+  background: #fff;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.tp-partner-title {
+  margin-bottom: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.tp-partner-subtitle {
+  color: #666;
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+.tp-partner-contact {
+  p {
+    margin-bottom: 10px;
+    color: #555;
+    font-size: 1rem;
+    
+    i {
+      margin-right: 10px;
+      color: #FFB396;
+    }
+  }
+}
+
+.tp-contact-info-wrapper {
+  background: #fff;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  margin-bottom: 50px;
+}
+
+.tp-contact-info-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 20px;
+  position: relative;
+
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 50px;
+    width: 1px;
+    background-color: #e5e5e5;
+  }
+}
+
+.tp-contact-info-icon {
+  width: 60px;
+  height: 60px;
+  background: #f8f9fa;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.tp-contact-info-content {
+  p {
+    margin-bottom: 5px;
+    
+    a {
+      color: #333;
+      font-size: 1rem;
+      transition: color 0.3s ease;
+      
+      &:hover {
+        color: #FFB396;
+      }
+    }
+  }
+}
+
+.tp-contact-social-wrapper {
+  .tp-contact-social-title {
+    font-size: 1rem;
+    margin-bottom: 10px;
+    color: #333;
+  }
+
+  .tp-contact-social-icon {
+    display: flex;
+    gap: 15px;
+
+    a {
+      width: 35px;
+      height: 35px;
+      background: #f8f9fa;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #FFB396;
+        color: #fff;
+      }
+    }
+  }
+} 

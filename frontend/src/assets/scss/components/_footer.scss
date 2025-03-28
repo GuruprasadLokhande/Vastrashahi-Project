@@ -1,0 +1,16 @@
+.tp-footer-logo {
+  margin-bottom: 25px;
+  
+  .vastrashahi-logo {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    text-decoration: none;
+    font-family: 'Poppins', sans-serif;
+    transition: color 0.3s ease;
+    
+    &:hover {
+      color: #FFB396;
+    }
+  }
+} 
