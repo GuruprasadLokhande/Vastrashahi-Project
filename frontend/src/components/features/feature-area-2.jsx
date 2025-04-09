@@ -15,7 +15,7 @@ export const feature_data = [
   {
     icon: <Discount />,
     title: 'Member Discount',
-    subtitle: 'Onevery order over $140.00'
+    subtitle: 'Onevery order over ₹140.00'
   },
   {
     icon: <Support />,

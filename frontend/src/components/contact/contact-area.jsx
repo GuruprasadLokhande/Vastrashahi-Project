@@ -24,10 +24,10 @@ const ContactArea = () => {
                     </div>
                     <div className="tp-contact-info-content">
                       <p data-info="mail">
-                        <a href="mailto:contact@shofy.com">contact@shofy.com</a>
+                        <a href="mailto:info@vastrashahi.com">info@vastrashahi.com</a>
                       </p>
                       <p data-info="phone">
-                        <a href="tel:670-413-90-762">+670 413 90 762</a>
+                        <a href="tel:+91-9876543210">+91 9876543210</a>
                       </p>
                     </div>
                   </div>
@@ -40,10 +40,10 @@ const ContactArea = () => {
                     <div className="tp-contact-info-content">
                       <p>
                         <a
-                          href="https://www.google.com/maps/place/New+York,+NY,+USA/@40.6976637,-74.1197638,11z/data=!3m1!4b1!4m6!3m5!1s0x89c24fa5d33f083b:0xc80b8f06e177fe62!8m2!3d40.7127753!4d-74.0059728!16zL20vMDJfMjg2"
+                          href="https://maps.app.goo.gl/qZfTZdfY3QP55qLs8"
                           target="_blank"
                         >
-                          84 sleepy hollow st. <br /> jamaica, New York 1432
+                          Rashiwade Bk || Tale - Radhanagari <br /> Dist - Kolhapur, Maharashtra, India, 416211
                         </a>
                       </p>
                     </div>
@@ -61,14 +61,14 @@ const ContactArea = () => {
                         </h4>
 
                         <div className="tp-contact-social-icon">
-                          <a href="#">
+                          <a href="https://facebook.com/vastrashahi" target="_blank">
                             <i className="fa-brands fa-facebook-f"></i>
                           </a>
-                          <a href="#">
-                            <i className="fa-brands fa-twitter"></i>
+                          <a href="https://instagram.com/vastrashahi" target="_blank">
+                            <i className="fa-brands fa-instagram"></i>
                           </a>
-                          <a href="#">
-                            <i className="fa-brands fa-linkedin-in"></i>
+                          <a href="https://youtube.com/vastrashahi" target="_blank">
+                            <i className="fa-brands fa-youtube"></i>
                           </a>
                         </div>
                       </div>
@@ -87,11 +87,11 @@ const ContactArea = () => {
           <div className="row">
             <div className="col-xl-12">
               <div className="tp-section-title-wrapper-2 text-center mb-50">
-                <span className="tp-section-title-pre-2">
+                <span className="tp-section-title-pre-2" style={{ color: '#FFB396' }}>
                   Our Partners
                   <TextShapeLine />
                 </span>
-                <h3 className="tp-section-title-2">
+                <h3 className="tp-section-title-2" style={{ color: '#ffffff' }}>
                   Our Trusted Partners
                 </h3>
               </div>
@@ -102,13 +102,12 @@ const ContactArea = () => {
             <div className="col-xl-6 col-lg-6">
               <div className="tp-partner-item p-relative mb-50">
                 <div className="tp-partner-content text-center">
-                  <h3 className="tp-partner-title" style={{ fontFamily: 'Marathi', fontSize: '2.5rem', color: '#FFB396' }}>
-                    पोतदार ब्रदर्स ज्वेलर्स
+                  <h3 className="tp-partner-title" style={{ fontSize: '2.5rem', color: '#FFB396' }}>
+                    Potdar Brother Jewellers
                   </h3>
-                  <p className="tp-partner-subtitle">Potdar Brother Jewellers</p>
                   <div className="tp-partner-contact mt-30">
                     <p><i className="fa-solid fa-phone"></i> +91 1234567890</p>
-                    <p><i className="fa-solid fa-location-dot"></i> 123 Jewellery Street, Mumbai, Maharashtra</p>
+                    <p><i className="fa-solid fa-location-dot"></i> Rashiwade Bk || Tale - Radhanagari, Kolhapur, Maharashtra, 416211</p>
                   </div>
                 </div>
               </div>
@@ -117,13 +116,12 @@ const ContactArea = () => {
             <div className="col-xl-6 col-lg-6">
               <div className="tp-partner-item p-relative mb-50">
                 <div className="tp-partner-content text-center">
-                  <h3 className="tp-partner-title" style={{ fontFamily: 'Marathi', fontSize: '2.5rem', color: '#FFB396' }}>
-                  न्यू मैत्रीण लेडीज शॉपी
+                  <h3 className="tp-partner-title" style={{ fontSize: '2.5rem', color: '#FFB396' }}>
+                    New Maintrin Ladies Shop
                   </h3>
-                  <p className="tp-partner-subtitle">New Maintrin Ladies Shop</p>
                   <div className="tp-partner-contact mt-30">
                     <p><i className="fa-solid fa-phone"></i> +91 9876543210</p>
-                    <p><i className="fa-solid fa-location-dot"></i> 456 Fashion Avenue, Pune, Maharashtra</p>
+                    <p><i className="fa-solid fa-location-dot"></i> Rashiwade Bk || Tale - Radhanagari, Kolhapur, Maharashtra, 416211</p>
                   </div>
                 </div>
               </div>

@@ -94,11 +94,11 @@ const ReviewForm = ({product_id}) => {
         <div className="tp-product-details-review-input-box">
           <div className="tp-product-details-review-input">
             <input
-            {...register("email", { required: `Name is required!` })}
+            {...register("email", { required: `Email is required!` })}
               name="email"
               id="email"
               type="email"
-              placeholder="shofy@mail.com"
+              placeholder="vastrashahi@mail.com"
             />
           </div>
           <div className="tp-product-details-review-input-title">

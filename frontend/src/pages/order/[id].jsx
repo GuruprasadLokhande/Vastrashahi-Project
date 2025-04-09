@@ -46,15 +46,19 @@ const SingleOrder = ({ params }) => {
                   <div className="col-xl-12">
                     <div className="invoice__header pb-20">
                       <div className="row align-items-end">
-                        <div className="col-md-4 col-sm-6">
-                          <div className="invoice__left">
-                            <Image src={logo} alt="logo" />
-                            <p>2879 Elk Creek Road <br /> Stone Mountain, Georgia </p>
+                        <div className="col-md-12 text-center mb-4">
+                          <div className="invoice__left mx-auto">
+                            <div className="tp-footer-logo">
+                              <span className="vastrashahi-logo text-center" style={{ fontSize: "36px", fontWeight: "800", display: "block", marginBottom: "10px", width: "100%" }}>
+                                Vastrashahi
+                              </span>
+                            </div>
+                            <p>Rashiwade Bk || Tale - Radhanagari <br /> Dist - Kolhapur, Maharashtra, India, 416211</p>
                           </div>
                         </div>
-                        <div className="col-md-8 col-sm-6">
-                          <div className="invoice__right mt-15 mt-sm-0 text-sm-end">
-                            <h3 className="text-uppercase font-70 mb-20">Invoice</h3>
+                        <div className="col-md-12">
+                          <div className="invoice__right mt-15 mt-sm-0 text-center">
+                            <h3 className="text-uppercase font-70 mb-20 text-center">Invoice</h3>
                           </div>
                         </div>
                       </div>
@@ -99,10 +103,10 @@ const SingleOrder = ({ params }) => {
                     {cart.map((item, i) => (
                       <tr key={i}>
                         <td>{i + 1}</td>
-                        <td>{item.title}</td>
-                        <td>{item.orderQuantity}</td>
-                        <td>${item.price}</td>
-                        <td>${item.price * item.orderQuantity}</td>
+                        <td className="product-name">{item.title}</td>
+                        <td className="product-quantity">{item.orderQuantity}</td>
+                        <td>₹{item.price}</td>
+                        <td>₹{item.price * item.orderQuantity}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -119,20 +123,20 @@ const SingleOrder = ({ params }) => {
                   <div className="col-lg-3 col-md-4">
                     <div className="invoice__shippint-cost mb-30">
                       <h5 className="mb-0">Shipping Cost</h5>
-                      <p className="tp-font-medium">${shippingCost}</p>
+                      <p className="tp-font-medium">₹{shippingCost}</p>
                     </div>
                   </div>
                   <div className="col-lg-3 col-md-4">
                     <div className="invoice__discount-cost mb-30">
                       <h5 className="mb-0">Discount</h5>
-                      <p className="tp-font-medium">${discount.toFixed(2)}</p>
+                      <p className="tp-font-medium">₹{discount.toFixed(2)}</p>
                     </div>
                   </div>
                   <div className="col-lg-3 col-md-4">
                     <div className="invoice__total-ammount mb-30">
                       <h5 className="mb-0">Total Ammount</h5>
                       <p className="tp-font-medium text-danger">
-                        <strong>${parseInt(totalAmount).toFixed(2)}</strong>
+                        <strong>₹{parseInt(totalAmount).toFixed(2)}</strong>
                       </p>
                     </div>
                   </div>
