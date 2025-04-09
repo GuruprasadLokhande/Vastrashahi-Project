@@ -62,7 +62,7 @@ const ProductGadgetArea = () => {
           <SwiperSlide key={i} className="tp-product-gadget-banner-item include-bg" 
           style={{ backgroundImage: `url(${b.bg.src})`}}>
             <div className="tp-product-gadget-banner-content">
-              <span className="tp-product-gadget-banner-price">Only ${b.price.toFixed(2)}</span>
+              <span className="tp-product-gadget-banner-price">Only ₹{b.price.toFixed(2)}</span>
               <h3 className="tp-product-gadget-banner-title">
                 <Link href="/shop">{b.title}</Link>
               </h3>

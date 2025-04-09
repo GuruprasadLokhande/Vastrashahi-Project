@@ -46,7 +46,7 @@ const ProductSmItem = ({ product }) => {
           </div>
         </div>
         <div className="tp-product-price-wrapper">
-          <span className="tp-product-price">${price.toFixed(2)}</span>
+          <span className="tp-product-price">₹{price.toFixed(2)}</span>
         </div>
       </div>
     </div>

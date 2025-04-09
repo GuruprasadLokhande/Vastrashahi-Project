@@ -35,7 +35,7 @@ const FooterTwo = () => {
                             </span>
                           </div>
                           <div className="tp-footer-contact-content">
-                            <p><a href="mailto:shofy@support.com">shofy@mail.com</a></p>
+                            <p><a href="mailto:vastrashahi@support.com">vastrashahi@mail.com</a></p>
                           </div>
                         </div>
                         <div className="tp-footer-contact-item d-flex align-items-start">
@@ -45,7 +45,7 @@ const FooterTwo = () => {
                             </span>
                           </div>
                           <div className="tp-footer-contact-content">
-                            <p><a href="https://www.google.com/maps/place/Sleepy+Hollow+Rd,+Gouverneur,+NY+13642,+USA/@44.3304966,-75.4552367,17z/data=!3m1!4b1!4m6!3m5!1s0x4cccddac8972c5eb:0x56286024afff537a!8m2!3d44.3304928!4d-75.453048!16s%2Fg%2F1tdsjdj4" target="_blank">79 Sleepy Hollow St. <br /> Jamaica, New York 1432</a></p>
+                            <p><a href="https://maps.app.goo.gl/qZfTZdfY3QP55qLs8" target="_blank">Rashiwade Bk || Tale - Radhanagari <br /> Dist - Kolhapur, Maharashtra, India, 416211</a></p>
                           </div>
                         </div>
                       </div>
@@ -116,8 +116,8 @@ const FooterTwo = () => {
                 <div className="row align-items-center">
                   <div className="col-md-6">
                     <div className="tp-footer-copyright">
-                      <p>© {new Date().getFullYear()} All Rights Reserved  |  Next js Template by
-                        <Link href="/">ThemePure</Link>.
+                      <p>© {new Date().getFullYear()} Vastrashahi  |  Premium Indian Clothing Store  |  Made with
+                        <Link href="/">{" "}❤ in India</Link>
                       </p>
                     </div>
                   </div>

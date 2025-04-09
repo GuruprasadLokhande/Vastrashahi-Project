@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 
 const ContactBreadcrumb = () => {
   return (
@@ -7,10 +8,10 @@ const ContactBreadcrumb = () => {
         <div className="row">
           <div className="col-xxl-12">
             <div className="breadcrumb__content p-relative z-index-1">
-              <h3 className="breadcrumb__title">Keep In Touch with Us</h3>
+              <h3 className="breadcrumb__title">Connect With Vastrashahi</h3>
               <div className="breadcrumb__list">
                 <span>
-                  <a href="#">Home</a>
+                  <Link href="/">Home</Link>
                 </span>
                 <span>Contact</span>
               </div>

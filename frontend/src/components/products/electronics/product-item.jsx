@@ -131,13 +131,13 @@ const ProductItem = ({ product, offer_style = false }) => {
           <div className="tp-product-price-wrapper">
             {discount > 0 ? (
               <>
-                <span className="tp-product-price old-price">${price}</span>
+                <span className="tp-product-price old-price">₹{price}</span>
                 <span className="tp-product-price new-price">
-                  {" "} ${(Number(price) - (Number(price) * Number(discount)) / 100).toFixed(2)}
+                  {" "} ₹{(Number(price) - (Number(price) * Number(discount)) / 100).toFixed(2)}
                 </span>
               </>
             ) : (
-              <span className="tp-product-price new-price">${parseFloat(price).toFixed(2)}</span>
+              <span className="tp-product-price new-price">₹{parseFloat(price).toFixed(2)}</span>
             )}
           </div>
           {offer_style && (

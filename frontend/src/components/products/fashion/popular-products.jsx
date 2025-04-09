@@ -90,7 +90,7 @@ const PopularProducts = () => {
               </Link>
             </div>
             <div className="tp-category-content-2">
-              <span>From ${item.price}</span>
+              <span>From ₹{item.price}</span>
               <h3 className="tp-category-title-2">
                 <Link href={`/product-details/${item._id}`}>{item.title.substring(0, 15)}</Link>
               </h3>
@@ -129,7 +129,7 @@ const PopularProducts = () => {
                   <TextShapeLine />
                 </span>
                 <h3 className="tp-section-title-2">
-                  Popular on the Shofy store.
+                  Popular on the Vastrashahi store.
                 </h3>
               </div>
             </div>

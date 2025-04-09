@@ -11,11 +11,11 @@ import { set_shipping } from "@/redux/features/order/orderSlice";
 import { set_coupon } from "@/redux/features/coupon/couponSlice";
 import { notifyError, notifySuccess } from "@/utils/toast";
 import {useCreatePaymentIntentMutation,useSaveOrderMutation} from "@/redux/features/order/orderApi";
-import { useGetOfferCouponsQuery } from "@/redux/features/coupon/couponApi";
+import { useGetCouponsQuery } from "@/redux/features/coupon/couponApi";
 
 const useCheckoutSubmit = () => {
   // offerCoupons
-  const { data: offerCoupons, isError, isLoading } = useGetOfferCouponsQuery();
+  const { data: offerCoupons, isError, isLoading } = useGetCouponsQuery();
   // addOrder
   const [saveOrder, {}] = useSaveOrderMutation();
   // createPaymentIntent
@@ -153,7 +153,7 @@ const useCheckoutSubmit = () => {
 
     if (total < result[0]?.minimumAmount) {
       notifyError(
-        `Minimum ${result[0].minimumAmount} USD required for Apply this coupon!`
+        `Minimum ${result[0].minimumAmount} INR required for Apply this coupon!`
       );
       return;
     } else {

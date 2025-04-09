@@ -13,7 +13,7 @@ const schema = Yup.object().shape({
   name: Yup.string().required().label("Name"),
   email: Yup.string().required().email().label("Email"),
   subject: Yup.string().required().label("Subject"),
-  message: Yup.string().required().label("Subject"),
+  message: Yup.string().required().label("Message"),
   remember: Yup.bool()
     .oneOf([true], "You must agree to the terms and conditions to proceed.")
     .label("Terms and Conditions"),
@@ -28,7 +28,7 @@ const ContactForm = () => {
     // on submit
     const onSubmit = (data) => {
       if(data){
-        notifySuccess('Message sent successfully!');
+        notifySuccess('Thank you for contacting Vastrashahi! We will get back to you soon.');
       }
 
       reset();
@@ -39,7 +39,7 @@ const ContactForm = () => {
       <div className="tp-contact-input-wrapper">
         <div className="tp-contact-input-box">
           <div className="tp-contact-input">
-            <input {...register("name", { required: `Name is required!` })} name="name" id="name" type="text" placeholder="Shahnewaz Sakil" />
+            <input {...register("name", { required: `Name is required!` })} name="name" id="name" type="text" placeholder="Your Full Name" />
           </div>
           <div className="tp-contact-input-title">
             <label htmlFor="name">Your Name</label>
@@ -48,7 +48,7 @@ const ContactForm = () => {
         </div>
         <div className="tp-contact-input-box">
           <div className="tp-contact-input">
-            <input {...register("email", { required: `Email is required!` })} name="email" id="email" type="email" placeholder="shofy@mail.com" />
+            <input {...register("email", { required: `Email is required!` })} name="email" id="email" type="email" placeholder="yourname@example.com" />
           </div>
           <div className="tp-contact-input-title">
             <label htmlFor="email">Your Email</label>
@@ -57,7 +57,7 @@ const ContactForm = () => {
         </div>
         <div className="tp-contact-input-box">
           <div className="tp-contact-input">
-            <input {...register("subject", { required: `Subject is required!` })} name="subject" id="subject" type="text" placeholder="Write your subject" />
+            <input {...register("subject", { required: `Subject is required!` })} name="subject" id="subject" type="text" placeholder="E.g., Product Inquiry, Feedback, Order Status" />
           </div>
           <div className="tp-contact-input-title">
             <label htmlFor="subject">Subject</label>
@@ -66,7 +66,7 @@ const ContactForm = () => {
         </div>
         <div className="tp-contact-input-box">
           <div className="tp-contact-input">
-            <textarea {...register("message", { required: `Message is required!` })} id="message" name="message" placeholder="Write your message here..."/>
+            <textarea {...register("message", { required: `Message is required!` })} id="message" name="message" placeholder="Please provide details about your inquiry or feedback..."/>
           </div>
           <div className="tp-contact-input-title">
             <label htmlFor="message">Your Message</label>
@@ -77,12 +77,12 @@ const ContactForm = () => {
       <div className="tp-contact-suggetions mb-20">
         <div className="tp-contact-remeber">
           <input  {...register("remember", {required: `Terms and Conditions is required!`})} name="remember" id="remember" type="checkbox" />
-          <label htmlFor="remember">Save my name, email, and website in this browser for the next time I comment.</label>
+          <label htmlFor="remember">I agree to Vastrashahi's privacy policy and terms of service.</label>
           <ErrorMsg msg={errors.remember?.message} />
         </div>
       </div>
       <div className="tp-contact-btn">
-        <button type="submit">Send Message</button>
+        <button type="submit" className="tp-btn-yellow">Send Message</button>
       </div>
     </form>
   );
