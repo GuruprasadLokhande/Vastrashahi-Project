@@ -22,7 +22,7 @@ const Layout = ({ children }) => {
     };
   }, [router]);
 
-  // Check screen size on mount
+  // Check screen size on mount and resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 1024) {
@@ -44,20 +44,25 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar - fixed on mobile, static on desktop */}
-      <aside 
-        className={`fixed lg:relative inset-y-0 left-0 z-30 w-64 lg:w-64 transform transition-transform duration-300 ease-in-out ${
+    <div className="flex h-screen overflow-hidden bg-gray-50">
+      {/* Desktop sidebar - always visible on lg screens */}
+      <div className="hidden lg:block lg:w-64 flex-shrink-0 z-30">
+        <Sidebar isSidebarOpen={true} />
+      </div>
+      
+      {/* Mobile sidebar - toggleable */}
+      <div 
+        className={`fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 ease-in-out lg:hidden ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0`}
+        }`}
       >
-        <Sidebar isSidebarOpen={isSidebarOpen} />
-      </aside>
+        <Sidebar isSidebarOpen={true} />
+      </div>
 
       {/* Backdrop for mobile sidebar */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           onClick={toggleSidebar}
         ></div>
       )}

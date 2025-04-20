@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Layout from '../../components/layout/Layout';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { toast } from 'react-toastify';
 import { productsAPI } from '../../services/api';
@@ -40,16 +39,53 @@ function AddProduct() {
 
   const fetchCategories = async () => {
     try {
-      // Use real MongoDB ObjectId formatted strings
-      setCategories([
-        { _id: '646dd899dfd90c4e8f6dcbcf', name: 'Men' },
-        { _id: '646dd899dfd90c4e8f6dcbd0', name: 'Women' },
-        { _id: '646dd899dfd90c4e8f6dcbd1', name: 'Kids' },
-        { _id: '646dd899dfd90c4e8f6dcbd2', name: 'Accessories' }
-      ]);
+      setLoading(true);
+      // Get categories from the API
+      const response = await productsAPI.getCategories();
+      
+      let categoryData = [];
+      
+      // Handle different API response structures
+      if (response && Array.isArray(response)) {
+        categoryData = response;
+      } else if (response?.categories && Array.isArray(response.categories)) {
+        categoryData = response.categories;
+      } else if (response?.data && Array.isArray(response.data)) {
+        categoryData = response.data;
+      } else {
+        // Fallback to default categories
+        categoryData = [
+          { _id: 'men', name: 'Men', isMain: true },
+          { _id: 'women', name: 'Women', isMain: true },
+          { _id: 'bags', name: 'Bags', isMain: true },
+          // Subcategories for Men
+          { _id: 'men-tshirts', name: 'T-Shirts', parentCategory: 'men' },
+          { _id: 'men-shirts', name: 'Shirts', parentCategory: 'men' },
+          { _id: 'men-jeans', name: 'Jeans', parentCategory: 'men' },
+          // Subcategories for Women
+          { _id: 'women-dresses', name: 'Dresses', parentCategory: 'women' },
+          { _id: 'women-tops', name: 'Tops', parentCategory: 'women' },
+          { _id: 'women-jeans', name: 'Jeans', parentCategory: 'women' },
+          // Subcategories for Bags
+          { _id: 'bags-handbags', name: 'Handbags', parentCategory: 'bags' },
+          { _id: 'bags-backpacks', name: 'Backpacks', parentCategory: 'bags' }
+        ];
+      }
+      
+      console.log('Categories loaded:', categoryData.length);
+      setCategories(categoryData);
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast.error('Failed to load categories');
+      
+      // Fallback to default categories
+      setCategories([
+        { _id: 'men', name: 'Men', isMain: true },
+        { _id: 'women', name: 'Women', isMain: true },
+        { _id: 'bags', name: 'Bags', isMain: true }
+      ]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -223,6 +259,21 @@ function AddProduct() {
     }
   };
 
+  // Add these helper functions for category handling
+  const getMainCategories = () => {
+    return categories.filter(category => 
+      !category.parentCategory || 
+      category.isMain === true
+    );
+  };
+  
+  const getSubcategories = (parentId) => {
+    return categories.filter(category => 
+      category.parentCategory === parentId || 
+      (typeof category.parentCategory === 'object' && category.parentCategory?._id === parentId)
+    );
+  };
+
   return (
     <div className="p-4 sm:p-6 md:p-8">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -350,28 +401,48 @@ function AddProduct() {
           <div className="space-y-4 md:col-span-2">
             <h2 className="text-xl font-semibold border-b pb-2">Organization</h2>
             
+            <div className="mb-4">
+              <label htmlFor="category" className="form-label">Category <span className="text-red-500">*</span></label>
+              <select
+                id="category"
+                name="category"
+                className="form-input"
+                value={formData.category}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select a category</option>
+                
+                {/* Main categories */}
+                {getMainCategories().map(category => (
+                  <option 
+                    key={category._id} 
+                    value={category._id}
+                    style={{ fontWeight: 'bold' }}
+                  >
+                    {category.name}
+                  </option>
+                ))}
+                
+                {/* Then subcategories grouped under parent category */}
+                {getMainCategories().map(mainCat => {
+                  const subcategories = getSubcategories(mainCat._id);
+                  if (subcategories.length === 0) return null;
+                  
+                  return (
+                    <optgroup key={`group-${mainCat._id}`} label={`${mainCat.name} Subcategories`}>
+                      {subcategories.map(subCat => (
+                        <option key={subCat._id} value={subCat._id}>
+                          {subCat.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  );
+                })}
+              </select>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                  Category*
-                </label>
-                <select
-                  id="category"
-                  name="category"
-                  className="input mt-1"
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {categories.map(category => (
-                    <option key={category._id} value={category._id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
               <div>
                 <label htmlFor="brand" className="block text-sm font-medium text-gray-700">
                   Brand
@@ -612,14 +683,6 @@ function AddProduct() {
     </div>
   );
 }
-
-AddProduct.getLayout = function getLayout(page) {
-  return (
-    <Layout>
-      {page}
-    </Layout>
-  );
-};
 
 export default function AddProductPage() {
   return (

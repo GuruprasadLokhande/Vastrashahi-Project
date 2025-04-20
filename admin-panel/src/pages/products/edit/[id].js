@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Layout from '../../../components/layout/Layout';
 import ProtectedRoute from '../../../components/ProtectedRoute';
 import { toast } from 'react-toastify';
 import { productsAPI } from '../../../services/api';
@@ -552,14 +551,6 @@ function EditProduct() {
     </div>
   );
 }
-
-EditProduct.getLayout = function getLayout(page) {
-  return (
-    <Layout>
-      {page}
-    </Layout>
-  );
-};
 
 export default function EditProductPage() {
   return (

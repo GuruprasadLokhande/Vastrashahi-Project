@@ -11,19 +11,19 @@ export default function Header({ toggleSidebar, isSidebarOpen }) {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-20">
       <div className="px-4 sm:px-6 py-4 flex items-center justify-between">
         {/* Left side: Menu toggle and title */}
         <div className="flex items-center">
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none"
+            className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none lg:hidden"
             aria-label="Toggle menu"
           >
             {isSidebarOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
-          <h1 className="ml-4 text-lg font-semibold text-gray-900 hidden md:block">
-            Vastrashahi
+          <h1 className="ml-4 text-lg font-semibold text-gray-900">
+            Vastrashahi Admin
           </h1>
         </div>
 
@@ -42,7 +42,7 @@ export default function Header({ toggleSidebar, isSidebarOpen }) {
 
             {/* Notifications dropdown */}
             {isNotificationsOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-10 overflow-hidden">
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50 overflow-hidden">
                 <div className="px-4 py-2 border-b border-gray-100">
                   <h2 className="text-sm font-semibold text-gray-800">Notifications</h2>
                 </div>

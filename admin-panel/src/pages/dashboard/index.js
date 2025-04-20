@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Layout from '../../components/layout/Layout';
 import StatsCard from '../../components/dashboard/StatsCard';
 import RecentOrders from '../../components/dashboard/RecentOrders';
 import { FiShoppingBag, FiUsers, FiDollarSign, FiShoppingCart } from 'react-icons/fi';
@@ -138,14 +137,6 @@ function Dashboard() {
     </div>
   );
 }
-
-Dashboard.getLayout = function getLayout(page) {
-  return (
-    <Layout>
-      {page}
-    </Layout>
-  );
-};
 
 export default function DashboardPage() {
   return (
