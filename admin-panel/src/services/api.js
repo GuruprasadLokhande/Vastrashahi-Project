@@ -465,35 +465,55 @@ export const productsAPI = {
   },
 };
 
-// Orders API functions
+// Orders API
 export const ordersAPI = {
-  getOrders: async (params) => {
+  getOrders: async (params = {}) => {
     try {
-      const response = await API.get('/order/all', { params });
-    return response.data;
+      const response = await API.get('/order/orders', { params });
+      
+      if (response.data && response.data.data) {
+        return response.data.data;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      console.warn('Unexpected orders data format:', response.data);
+      return [];
     } catch (error) {
-      console.error('Get orders API error:', error);
+      console.error('Error fetching orders:', error);
       throw handleAPIError(error);
     }
   },
-  getOrder: async (id) => {
+
+  getOrderById: async (id) => {
     try {
       const response = await API.get(`/order/${id}`);
-    return response.data;
+      return response.data;
     } catch (error) {
-      console.error(`Get order API error for ID ${id}:`, error);
+      console.error(`Error fetching order ${id}:`, error);
       throw handleAPIError(error);
     }
   },
-  updateOrderStatus: async (id, status) => {
+
+  updateOrderStatus: async (orderId, status) => {
     try {
-      const response = await API.patch(`/order/status/${id}`, { status });
-    return response.data;
+      const response = await API.patch(`/order/update-status/${orderId}`, { status });
+      return response.data;
     } catch (error) {
-      console.error(`Update order status API error for ID ${id}:`, error);
+      console.error(`Error updating order status for ${orderId}:`, error);
       throw handleAPIError(error);
     }
   },
+
+  deleteOrder: async (id) => {
+    try {
+      const response = await API.delete(`/order/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error deleting order ${id}:`, error);
+      throw handleAPIError(error);
+    }
+  }
 };
 
 // Dashboard API functions

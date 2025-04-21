@@ -5,6 +5,7 @@ import ProtectedRoute from '../../components/ProtectedRoute';
 import { FiEdit, FiEye, FiTrash2, FiFilter, FiRefreshCw } from 'react-icons/fi';
 import StatusBadge from '../../components/StatusBadge';
 import OrderStatusModal from '../../components/orders/OrderStatusModal';
+import { ordersAPI } from '../../services/api';
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -18,15 +19,8 @@ const OrdersPage = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
-      const response = await fetch(`${apiBaseUrl}/orders`);
-      
-      if (!response.ok) {
-        throw new Error(`Error fetching orders: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setOrders(data.result || []);
+      const data = await ordersAPI.getOrders();
+      setOrders(data || []);
       setError(null);
     } catch (err) {
       console.error('Failed to fetch orders:', err);
@@ -46,18 +40,7 @@ const OrdersPage = () => {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       setLoading(true);
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
-      const response = await fetch(`${apiBaseUrl}/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error updating order status: ${response.status}`);
-      }
+      await ordersAPI.updateOrderStatus(orderId, newStatus);
       
       // Update the order in the local state
       setOrders(orders.map(order => 
@@ -120,9 +103,13 @@ const OrdersPage = () => {
           </div>
         </div>
         
-        {loading && <div className="text-center py-10">Loading orders...</div>}
+        {loading && (
+          <div className="text-center py-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          </div>
+        )}
         
-        {error && !loading && (
+        {error && (
           <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
             <div className="flex">
               <div className="flex-shrink-0">
@@ -180,24 +167,24 @@ const OrdersPage = () => {
                 {filteredOrders.map((order) => (
                   <tr key={order._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      #{order.orderNumber || order._id.substring(0, 8)}
+                      #{order.invoice || order._id.substring(0, 8)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.user?.name || order.shippingInfo?.name || 'Guest User'}
+                      {order.name || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-                      ₹{order.totalPrice?.toFixed(2) || 0}
+                      ₹{order.totalAmount?.toFixed(2) || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {order.paymentInfo?.method || 'COD'}
+                      {order.paymentMethod || 'COD'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={order.status} />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center space-x-3">
                         <button
                           onClick={() => openStatusModal(order)}

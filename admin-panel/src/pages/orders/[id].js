@@ -6,7 +6,8 @@ import { toast } from 'react-toastify';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import StatusBadge from '../../components/StatusBadge';
 import OrderStatusModal from '../../components/orders/OrderStatusModal';
-import { FiArrowLeft, FiEdit, FiPrinter, FiDownload } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit, FiPrinter } from 'react-icons/fi';
+import { ordersAPI } from '../../services/api';
 
 const OrderDetails = () => {
   const router = useRouter();
@@ -24,15 +25,8 @@ const OrderDetails = () => {
       
       setLoading(true);
       try {
-        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
-        const response = await fetch(`${apiBaseUrl}/orders/${id}`);
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching order: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        setOrder(data.result);
+        const data = await ordersAPI.getOrderById(id);
+        setOrder(data);
         setError(null);
       } catch (err) {
         console.error('Failed to fetch order details:', err);
@@ -50,18 +44,7 @@ const OrderDetails = () => {
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       setLoading(true);
-      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
-      const response = await fetch(`${apiBaseUrl}/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Error updating order status: ${response.status}`);
-      }
+      await ordersAPI.updateOrderStatus(orderId, newStatus);
       
       // Update the order in the local state
       setOrder(prev => ({
@@ -100,7 +83,9 @@ const OrderDetails = () => {
     return (
       <ProtectedRoute>
         <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen">
-          <div className="text-center py-10">Loading order details...</div>
+          <div className="text-center py-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          </div>
         </div>
       </ProtectedRoute>
     );
@@ -123,7 +108,10 @@ const OrderDetails = () => {
             </div>
           </div>
           <div className="mt-4">
-            <Link href="/orders" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <Link
+              href="/orders"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
               <FiArrowLeft className="mr-2 -ml-1 h-4 w-4" />
               Back to Orders
             </Link>
@@ -150,7 +138,10 @@ const OrderDetails = () => {
             </div>
           </div>
           <div className="mt-4">
-            <Link href="/orders" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <Link
+              href="/orders"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
               <FiArrowLeft className="mr-2 -ml-1 h-4 w-4" />
               Back to Orders
             </Link>
@@ -166,11 +157,14 @@ const OrderDetails = () => {
         {/* Header */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between print:hidden">
           <div className="flex items-center">
-            <Link href="/orders" className="mr-4 text-indigo-600 hover:text-indigo-900">
+            <Link
+              href="/orders"
+              className="mr-4 text-indigo-600 hover:text-indigo-900"
+            >
               <FiArrowLeft className="h-5 w-5" />
             </Link>
             <h1 className="text-2xl font-bold text-gray-900">
-              Order #{order.orderNumber || order._id?.substring(0, 8)}
+              Order #{order.invoice || order._id?.substring(0, 8)}
             </h1>
           </div>
           <div className="flex items-center space-x-3 mt-4 sm:mt-0">
@@ -205,60 +199,63 @@ const OrderDetails = () => {
           <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
             <dl className="sm:divide-y sm:divide-gray-200">
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">Customer</dt>
+                <dt className="text-sm font-medium text-gray-500">Customer Name</dt>
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {order.user?.name || order.shippingInfo?.name || 'Guest User'}
+                  {order.name || 'N/A'}
                 </dd>
               </div>
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">Email</dt>
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {order.user?.email || order.shippingInfo?.email || 'N/A'}
+                  {order.email || 'N/A'}
                 </dd>
               </div>
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">Phone</dt>
+                <dt className="text-sm font-medium text-gray-500">Contact</dt>
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {order.shippingInfo?.phone || 'N/A'}
+                  {order.contact || 'N/A'}
                 </dd>
               </div>
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">Total Amount</dt>
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-medium">
-                  ₹{order.totalPrice?.toFixed(2) || 0}
+                  ₹{order.totalAmount?.toFixed(2) || 0}
                 </dd>
               </div>
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">Payment Method</dt>
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {order.paymentInfo?.method || 'COD'}
-                  {order.paymentInfo?.status && ` (${order.paymentInfo.status})`}
+                  {order.paymentMethod || 'COD'}
                 </dd>
               </div>
               <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
                 <dt className="text-sm font-medium text-gray-500">Shipping Address</dt>
                 <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  {order.shippingInfo ? (
-                    <div>
-                      <p>{order.shippingInfo.address}</p>
-                      <p>{order.shippingInfo.city}, {order.shippingInfo.state} {order.shippingInfo.postalCode}</p>
-                      <p>{order.shippingInfo.country}</p>
-                    </div>
-                  ) : (
-                    'N/A'
-                  )}
+                  <div>
+                    <p>{order.address}</p>
+                    <p>{order.city}, {order.zipCode}</p>
+                    <p>{order.country}</p>
+                  </div>
                 </dd>
               </div>
+              {order.orderNote && (
+                <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                  <dt className="text-sm font-medium text-gray-500">Order Note</dt>
+                  <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                    {order.orderNote}
+                  </dd>
+                </div>
+              )}
             </dl>
           </div>
         </div>
         
         {/* Order Items */}
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
           <div className="px-4 py-5 sm:px-6">
             <h3 className="text-lg leading-6 font-medium text-gray-900">Order Items</h3>
             <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              {order.orderItems?.length || 0} item(s) ordered
+              {order.cart?.length || 0} item(s) ordered
             </p>
           </div>
           <div className="border-t border-gray-200">
@@ -280,7 +277,7 @@ const OrderDetails = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {order.orderItems && order.orderItems.map((item, index) => (
+                {order.cart && order.cart.map((item, index) => (
                   <tr key={index}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -319,6 +316,11 @@ const OrderDetails = () => {
                               ></span>
                             </div>
                           )}
+                          {item.category && (
+                            <div className="text-sm text-gray-500">
+                              Category: {item.category.name}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -326,10 +328,10 @@ const OrderDetails = () => {
                       ₹{parseFloat(item.price).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.quantity}
+                      {item.orderQuantity || item.quantity || 1}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ₹{(parseFloat(item.price) * item.quantity).toFixed(2)}
+                      ₹{(parseFloat(item.price) * (item.orderQuantity || item.quantity || 1)).toFixed(2)}
                     </td>
                   </tr>
                 ))}
@@ -340,7 +342,7 @@ const OrderDetails = () => {
                     Subtotal:
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    ₹{order.itemsPrice?.toFixed(2) || 0}
+                    ₹{order.subTotal?.toFixed(2) || 0}
                   </td>
                 </tr>
                 <tr>
@@ -348,15 +350,15 @@ const OrderDetails = () => {
                     Shipping Fee:
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    ₹{order.shippingPrice?.toFixed(2) || 0}
+                    ₹{order.shippingCost?.toFixed(2) || 0}
                   </td>
                 </tr>
                 <tr>
                   <td colSpan="3" className="px-6 py-4 text-sm font-medium text-gray-900 text-right">
-                    Tax:
+                    Discount:
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    ₹{order.taxPrice?.toFixed(2) || 0}
+                    ₹{order.discount?.toFixed(2) || 0}
                   </td>
                 </tr>
                 <tr>
@@ -364,7 +366,7 @@ const OrderDetails = () => {
                     Total:
                   </td>
                   <td className="px-6 py-4 text-base font-bold text-gray-900">
-                    ₹{order.totalPrice?.toFixed(2) || 0}
+                    ₹{order.totalAmount?.toFixed(2) || 0}
                   </td>
                 </tr>
               </tfoot>
