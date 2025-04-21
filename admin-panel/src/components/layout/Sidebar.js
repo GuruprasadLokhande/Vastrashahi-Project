@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -39,9 +40,16 @@ export default function Sidebar({ isSidebarOpen }) {
 
   return (
     <div className="bg-white h-full shadow-sm flex flex-col">
-      <div className="p-4 flex items-center justify-center border-b border-gray-100">
+      <div className="p-6 flex items-center justify-center">
         <Link href="/dashboard" className="flex flex-shrink-0 items-center">
-          <h1 className="text-xl font-bold text-primary">Vastrashahi</h1>
+          <Image
+            src="/Vastrashahi Logo.png"
+            alt="Vastrashahi Logo"
+            width={240}
+            height={100}
+            priority
+            className="h-16 w-auto"
+          />
         </Link>
       </div>
 

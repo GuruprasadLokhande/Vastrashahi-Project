@@ -108,12 +108,16 @@ const CheckoutBillingArea = ({ register, errors }) => {
                 </label>
                 <input
                   {...register("contactNo", {
-                    required: `ContactNumber is required!`,
+                    required: "Contact number is required!",
+                    pattern: {
+                      value: /^[6-9]\d{9}$/,
+                      message: "Please enter a valid 10-digit Indian mobile number"
+                    }
                   })}
                   name="contactNo"
                   id="contactNo"
-                  type="text"
-                  placeholder="Phone"
+                  type="tel"
+                  placeholder="Enter 10-digit mobile number"
                 />
                 <ErrorMsg msg={errors?.contactNo?.message} />
               </div>
@@ -124,11 +128,25 @@ const CheckoutBillingArea = ({ register, errors }) => {
                   Email address <span>*</span>
                 </label>
                 <input
-                  {...register("email", { required: `Email is required!` })}
+                  {...register("email", {
+                    required: "Email address is required!",
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: "Please enter a valid email address"
+                    },
+                    validate: {
+                      notAdmin: (value) => {
+                        return !value.toLowerCase().includes('admin') || 'Email cannot contain "admin"';
+                      },
+                      notTest: (value) => {
+                        return !value.toLowerCase().includes('test') || 'Email cannot contain "test"';
+                      }
+                    }
+                  })}
                   name="email"
                   id="email"
                   type="email"
-                  placeholder="Email"
+                  placeholder="Enter your email address"
                   defaultValue={user?.email}
                 />
                 <ErrorMsg msg={errors?.email?.message} />

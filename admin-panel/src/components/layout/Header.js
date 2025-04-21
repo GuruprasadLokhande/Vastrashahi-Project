@@ -23,7 +23,7 @@ export default function Header({ toggleSidebar, isSidebarOpen }) {
             {isSidebarOpen ? <FiX size={24} /> : <FiMenu size={24} />}
           </button>
           <h1 className="ml-4 text-lg font-semibold text-gray-900">
-            Vastrashahi Admin
+            
           </h1>
         </div>
 
