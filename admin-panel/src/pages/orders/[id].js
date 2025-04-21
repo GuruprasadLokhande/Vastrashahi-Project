@@ -9,6 +9,30 @@ import OrderStatusModal from '../../components/orders/OrderStatusModal';
 import { FiArrowLeft, FiEdit, FiPrinter } from 'react-icons/fi';
 import { ordersAPI } from '../../services/api';
 
+// Add print styles
+const printStyles = `
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    .print-section, .print-section * {
+      visibility: visible;
+    }
+    .print-section {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+    .print-hide {
+      display: none !important;
+    }
+    .print-break {
+      break-inside: avoid;
+    }
+  }
+`;
+
 const OrderDetails = () => {
   const router = useRouter();
   const { id } = router.query;
@@ -153,7 +177,8 @@ const OrderDetails = () => {
   
   return (
     <ProtectedRoute>
-      <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen">
+      <style>{printStyles}</style>
+      <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen print-hide">
         {/* Header */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between print:hidden">
           <div className="flex items-center">
@@ -374,7 +399,110 @@ const OrderDetails = () => {
           </div>
         </div>
       </div>
-      
+
+      {/* Print-optimized invoice section */}
+      <div className="print-section bg-white p-8">
+        {/* Invoice Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-2xl font-bold mb-2">INVOICE</h1>
+          <p className="text-gray-600">#{order.invoice || order._id?.substring(0, 8)}</p>
+          <p className="text-gray-600">Date: {formatDate(order.createdAt)}</p>
+        </div>
+
+        {/* Company and Customer Info */}
+        <div className="flex justify-between mb-8 print-break">
+          <div>
+            <h2 className="font-bold mb-2">From:</h2>
+            <p className="text-gray-600">Vastrashahi</p>
+            <p className="text-gray-600">Your Fashion Destination</p>
+          </div>
+          <div className="text-right">
+            <h2 className="font-bold mb-2">Bill To:</h2>
+            <p className="text-gray-600">{order.name}</p>
+            <p className="text-gray-600">{order.email}</p>
+            <p className="text-gray-600">{order.contact}</p>
+            <p className="text-gray-600">{order.address}</p>
+            <p className="text-gray-600">{order.city}, {order.zipCode}</p>
+            <p className="text-gray-600">{order.country}</p>
+          </div>
+        </div>
+
+        {/* Order Items */}
+        <div className="mb-8 print-break">
+          <table className="min-w-full">
+            <thead>
+              <tr className="border-b">
+                <th className="py-2 text-left">Product</th>
+                <th className="py-2 text-right">Price</th>
+                <th className="py-2 text-right">Quantity</th>
+                <th className="py-2 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {order.cart && order.cart.map((item, index) => (
+                <tr key={index} className="border-b">
+                  <td className="py-2">
+                    <div>
+                      <p className="font-medium">{item.title}</p>
+                      {item.size && <p className="text-sm text-gray-600">Size: {item.size}</p>}
+                      {item.color && (
+                        <p className="text-sm text-gray-600">
+                          Color: {typeof item.color === 'object' ? item.color.name : item.color}
+                        </p>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-2 text-right">₹{parseFloat(item.price).toFixed(2)}</td>
+                  <td className="py-2 text-right">{item.orderQuantity || item.quantity || 1}</td>
+                  <td className="py-2 text-right">
+                    ₹{(parseFloat(item.price) * (item.orderQuantity || item.quantity || 1)).toFixed(2)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Order Summary */}
+        <div className="flex justify-end print-break">
+          <div className="w-64">
+            <div className="flex justify-between py-2">
+              <span>Subtotal:</span>
+              <span>₹{order.subTotal?.toFixed(2) || 0}</span>
+            </div>
+            <div className="flex justify-between py-2">
+              <span>Shipping Fee:</span>
+              <span>₹{order.shippingCost?.toFixed(2) || 0}</span>
+            </div>
+            <div className="flex justify-between py-2">
+              <span>Discount:</span>
+              <span>₹{order.discount?.toFixed(2) || 0}</span>
+            </div>
+            <div className="flex justify-between py-2 font-bold border-t">
+              <span>Total:</span>
+              <span>₹{order.totalAmount?.toFixed(2) || 0}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Payment Info */}
+        <div className="mt-8 print-break">
+          <div className="border-t pt-4">
+            <p className="text-gray-600">Payment Method: {order.paymentMethod || 'COD'}</p>
+            <p className="text-gray-600">Order Status: {order.status}</p>
+            {order.orderNote && (
+              <p className="text-gray-600 mt-2">Note: {order.orderNote}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-gray-500 text-sm print-break">
+          <p>Thank you for shopping with Vastrashahi!</p>
+          <p>For any queries, please contact our customer support.</p>
+        </div>
+      </div>
+
       {/* Status Update Modal */}
       {isStatusModalOpen && (
         <OrderStatusModal
