@@ -13,69 +13,48 @@ const menu_data = [
   {
     id: 2,
     products: true,
-    title: 'Products',
+    title: 'Men',
     link: '/shop',
     product_pages: [
       {
-        title: 'Shop Page',
+        title: 'Men\'s Fashion',
         link: '/shop',
         mega_menus: [
-          { title: 'Only Categories', link: '/shop-category' },
-          { title: 'Shop Grid with Sideber', link: '/shop' },
-          { title: 'Product Details', link: '/product-details' },
+          { title: 'T-Shirts & Polos', link: '/shop?category=t-shirts-polos&gender=men' },
+          { title: 'Shirts', link: '/shop?category=shirts&gender=men' },
+          { title: 'Jeans & Trousers', link: '/shop?category=jeans-trousers&gender=men' },
+          { title: 'Kurtas & Ethnic Wear', link: '/shop?category=ethnic-wear&gender=men' },
+          { title: 'Jackets & Hoodies', link: '/shop?category=jackets-hoodies&gender=men' }
         ]
-      },
-      {
-        title: 'Products',
-        link: '/product-details',
-        mega_menus: [
-          { title: 'Product Simple', link: '/product-details' },
-          { title: 'With Video', link: '/product-details-video' },
-          { title: 'With Countdown Timer', link: '/product-details-countdown' },
-          { title: 'Variations Swatches', link: '/product-details-swatches' },
-        ]
-      },
-      {
-        title: 'eCommerce',
-        link: '/shop',
-        mega_menus: [
-          { title: 'Shopping Cart', link: '/cart' },
-          { title: 'Compare', link: '/compare' },
-          { title: 'Wishlist', link: '/wishlist' },
-          { title: 'Checkout', link: '/checkout' },
-          { title: 'My account', link: '/profile' },
-        ]
-      },
-      {
-        title: 'More Pages',
-        link: '/shop',
-        mega_menus: [
-          { title: 'Login', link: '/login' },
-          { title: 'Register', link: '/register' },
-          { title: 'Forgot Password', link: '/forgot' },
-          { title: '404 Error', link: '/404' },
-        ]
-      },
+      }
     ]
   },
   {
     id: 3,
-    sub_menu: true,
-    title: 'Shop',
+    products: true,
+    title: 'Women',
     link: '/shop',
-    sub_menus: [
-      { title: 'Shop', link: '/shop' },
-      { title: 'Right Sidebar', link: '/shop-right-sidebar' },
-      { title: 'Hidden Sidebar', link: '/shop-hidden-sidebar' },
-    ],
+    product_pages: [
+      {
+        title: 'Women\'s Fashion',
+        link: '/shop',
+        mega_menus: [
+          { title: 'Sarees & Ethnic Wear', link: '/shop?category=ethnic-wear&gender=women' },
+          { title: 'Kurtis & Tunics', link: '/shop?category=kurtis-tunics&gender=women' },
+          { title: 'Tops & T-Shirts', link: '/shop?category=tops-tshirts&gender=women' },
+          { title: 'Dresses & Jumpsuits', link: '/shop?category=dresses-jumpsuits&gender=women' },
+          { title: 'Leggings & Palazzos', link: '/shop?category=leggings-palazzos&gender=women' }
+        ]
+      }
+    ]
   },
   {
-    id: 6,
+    id: 4,
     single_link: true,
     title: 'Contact',
     link: '/contact',
-  },
-]
+  }
+];
 
 export default menu_data;
 
@@ -90,42 +69,33 @@ export const mobile_menu = [
   {
     id: 2,
     sub_menu: true,
-    title: 'Products',
+    title: 'Men',
     link: '/shop',
     sub_menus: [
-      { title: 'Shop', link: '/shop' },
-      { title: 'Right Sidebar', link: '/shop-right-sidebar' },
-      { title: 'Hidden Sidebar', link: '/shop-hidden-sidebar' },
-      { title: 'Only Categories', link: '/shop-category' },
-      { title: 'Product Simple', link: '/product-details' },
-      { title: 'With Video', link: '/product-details-video' },
-      { title: 'With Countdown Timer', link: '/product-details-countdown' },
-      { title: 'Variations Swatches', link: '/product-details-swatches' },
+      { title: 'T-Shirts & Polos', link: '/shop?category=t-shirts-polos&gender=men' },
+      { title: 'Shirts', link: '/shop?category=shirts&gender=men' },
+      { title: 'Jeans & Trousers', link: '/shop?category=jeans-trousers&gender=men' },
+      { title: 'Kurtas & Ethnic Wear', link: '/shop?category=ethnic-wear&gender=men' },
+      { title: 'Jackets & Hoodies', link: '/shop?category=jackets-hoodies&gender=men' }
     ],
   },
   {
     id: 3,
     sub_menu: true,
-    title: 'eCommerce',
-    link: '/cart',
+    title: 'Women',
+    link: '/shop',
     sub_menus: [
-      { title: 'Shopping Cart', link: '/cart' },
-      { title: 'Compare', link: '/compare' },
-      { title: 'Wishlist', link: '/wishlist' },
-      { title: 'Checkout', link: '/checkout' },
-      { title: 'My account', link: '/profile' },
+      { title: 'Sarees & Ethnic Wear', link: '/shop?category=ethnic-wear&gender=women' },
+      { title: 'Kurtis & Tunics', link: '/shop?category=kurtis-tunics&gender=women' },
+      { title: 'Tops & T-Shirts', link: '/shop?category=tops-tshirts&gender=women' },
+      { title: 'Dresses & Jumpsuits', link: '/shop?category=dresses-jumpsuits&gender=women' },
+      { title: 'Leggings & Palazzos', link: '/shop?category=leggings-palazzos&gender=women' }
     ],
   },
   {
     id: 4,
-    sub_menu: true,
-    title: 'More Pages',
-    link: '/login',
-    sub_menus: [
-      { title: 'Login', link: '/login' },
-      { title: 'Register', link: '/register' },
-      { title: 'Forgot Password', link: '/forgot' },
-      { title: '404 Error', link: '/404' },
-    ],
+    single_link: true,
+    title: 'Contact',
+    link: '/contact',
   }
-]
+];

@@ -53,43 +53,10 @@ const Menus = () => {
   }
   return (
     <ul>
-      {menu_data.map((menu) =>
-        menu.homes ? (
-          <li key={menu.id} className="has-dropdown has-mega-menu">
-            <Link href={menu.link}>{menu.title}</Link>
-            <div className="home-menu tp-submenu tp-mega-menu">
-            {/* <div className="tp-product-arrival-slider fix">
-              {content}
-            </div> */}
-               <div className="row">
-            {blogs.map(blog => (
-              <div key={blog.id} className="col-xl-4 col-lg-4 col-md-6">
-                <BlogItem blog={blog} />
-              </div>
-            ))}
-          </div>
-                {/* <OfferCouponArea/> */}
-              <div className="row row-cols-1 row-cols-lg-4 row-cols-xl-4">
-                {menu.home_pages.map((home, i) => (
-                  <div key={i} className="col">
-                    <div className="home-menu-item">
-                      {/* <Link href={home.link}>
-                        <div className="home-menu-thumb p-relative fix">
-                          <Image src={home.img} alt="home img" />
-                        </div>
-                        <div className="home-menu-content">
-                          <h5 className="home-menu-title">{home.title}</h5>
-                        </div>
-                      </Link> */}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </li>
-        ) : menu.products ? (
-          <li key={menu.id} className="has-dropdown has-mega-menu ">
-            <Link href={menu.link}>{menu.title}</Link>
+      {menu_data.map((menu) => (
+        <li key={menu.id} className={menu.products ? "has-dropdown has-mega-menu" : ""}>
+          <Link href={menu.link}>{menu.title}</Link>
+          {menu.products && (
             <ul className="tp-submenu tp-mega-menu mega-menu-style-2">
               {menu.product_pages.map((p, i) => (
                 <li key={i} className="has-dropdown">
@@ -105,25 +72,15 @@ const Menus = () => {
                   </ul>
                 </li>
               ))}
+              <li className="mega-menu-product">
+                <div className="row">
+                  {content}
+                </div>
+              </li>
             </ul>
-          </li>
-        ) : menu.sub_menu ? (
-          <li key={menu.id} className="has-dropdown">
-            <Link href={menu.link}>{menu.title}</Link>
-            <ul className="tp-submenu">
-              {menu.sub_menus.map((b, i) => (
-                <li key={i}>
-                  <Link href={b.link}>{b.title}</Link>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ) : (
-          <li key={menu.id}>
-            <Link href={menu.link}>{menu.title}</Link>
-          </li>
-        )
-      )}
+          )}
+        </li>
+      ))}
     </ul>
   );
 };

@@ -1,5 +1,6 @@
 import Cookies from "js-cookie";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { getToken } from "@/utils/auth";
 const NEXT_PUBLIC_API_BASE_URL = 'http://localhost:8000';
 
 export const apiSlice = createApi({
@@ -16,6 +17,10 @@ export const apiSlice = createApi({
             headers.set("Authorization", `Bearer ${user.accessToken}`);
           }
         }
+        const token = getToken();
+        if (token) {
+          headers.set("authorization", `Bearer ${token}`);
+        }
         headers.set('Content-Type', 'application/json');
         headers.set('Accept', 'application/json');
         return headers;
@@ -26,5 +31,5 @@ export const apiSlice = createApi({
     },
   }),
   endpoints: (builder) => ({}),
-  tagTypes: ["Products","Coupon","Product","RelatedProducts","UserOrder","UserOrders","ProductType","OfferProducts","PopularProducts","TopRatedProducts","Categories"]
+  tagTypes: ["Products","Coupon","Product","RelatedProducts","UserOrder","UserOrders","ProductType","OfferProducts","PopularProducts","TopRatedProducts","Categories","Orders","Cart","Wishlist","Auth","User"]
 });

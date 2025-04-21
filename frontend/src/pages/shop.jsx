@@ -98,12 +98,21 @@ const ShopPage = ({ query }) => {
       }
     }
 
+    // gender filter
+    if (query.gender) {
+      product_items = product_items.filter(
+        (p) => p.gender && p.gender.toLowerCase() === query.gender.toLowerCase()
+      );
+    }
+
     // category filter
     if (query.category) {
+      const categorySlug = query.category.toLowerCase().replace(/[&\s]+/g, '-');
       product_items = product_items.filter(
-        (p) =>
-          p.parent.toLowerCase().replace("&", "").split(" ").join("-") ===
-          query.category
+        (p) => {
+          const productCategory = p.category?.toLowerCase().replace(/[&\s]+/g, '-');
+          return productCategory === categorySlug;
+        }
       );
     }
 
