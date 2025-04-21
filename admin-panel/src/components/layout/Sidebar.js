@@ -35,21 +35,6 @@ export default function Sidebar({ isSidebarOpen }) {
       label: 'Orders',
       icon: <FiShoppingCart size={20} />,
     },
-    {
-      path: '/staff',
-      label: 'Staff',
-      icon: <FiUsers size={20} />,
-    },
-    {
-      path: '/reports',
-      label: 'Reports',
-      icon: <FiFileText size={20} />,
-    },
-    {
-      path: '/settings',
-      label: 'Settings',
-      icon: <FiSettings size={20} />,
-    },
   ];
 
   return (

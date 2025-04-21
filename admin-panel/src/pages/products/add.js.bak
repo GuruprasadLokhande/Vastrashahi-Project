@@ -1,0 +1,1035 @@
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import ProtectedRoute from '../../components/ProtectedRoute';
+import { toast } from 'react-toastify';
+import { productsAPI } from '../../services/api';
+import Link from 'next/link';
+import { FiSave, FiX, FiUpload, FiTrash2, FiInfo } from 'react-icons/fi';
+
+// Helper function to validate MongoDB ObjectId
+const isValidObjectId = (id) => {
+  // MongoDB ObjectId is a 24 character hex string
+  return id && /^[0-9a-fA-F]{24}$/.test(id);
+};
+
+const AddProduct = () => {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [formData, setFormData] = useState({
+    title: '',
+    price: '',
+    discountPercentage: '',
+    quantity: '1',
+    description: '',
+    category: '',
+    parent: '',
+    children: '',
+    brand: '0',
+    type: '',
+    sizes: [],
+    colors: []
+  });
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [selectedParentCategory, setSelectedParentCategory] = useState('');
+  const [subcategories, setSubcategories] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([]);
+  
+  // Size and color options
+  const availableSizes = [
+    { id: 'XS', label: 'XS' },
+    { id: 'S', label: 'S' },
+    { id: 'M', label: 'M' },
+    { id: 'L', label: 'L' },
+    { id: 'XL', label: 'XL' },
+    { id: 'XXL', label: 'XXL' }
+  ];
+
+  // Available color options
+  const availableColors = [
+    { id: 'red', label: 'Red', code: '#FF0000' },
+    { id: 'blue', label: 'Blue', code: '#0000FF' },
+    { id: 'green', label: 'Green', code: '#008000' },
+    { id: 'black', label: 'Black', code: '#000000' },
+    { id: 'white', label: 'White', code: '#FFFFFF' },
+    { id: 'yellow', label: 'Yellow', code: '#FFFF00' },
+    { id: 'purple', label: 'Purple', code: '#800080' },
+    { id: 'pink', label: 'Pink', code: '#FFC0CB' },
+    { id: 'orange', label: 'Orange', code: '#FFA500' },
+    { id: 'grey', label: 'Grey', code: '#808080' }
+  ];
+
+  // Mock data for categories and brands - replace with API calls in production
+  const mockCategories = [
+    { _id: '1', parent: '👜 Bags', name: 'Bags' },
+    { _id: '2', parent: '👨 Men', name: 'Men' },
+    { _id: '3', parent: '👩‍🦰 Women', name: 'Women' }
+  ];
+  
+  const mockBrands = [
+    { _id: '0', name: 'Vastrashahi' }
+  ];
+  
+  // Updated subcategories based on parent selection
+  const subcategoriesMap = {
+    // Bags subcategories
+    '1': [
+      { _id: '101', name: 'HandBag' },
+      { _id: '102', name: 'Ladies purchase' },
+      { _id: '103', name: 'Traveling Bag' }
+    ],
+    // Men subcategories
+    '2': [
+      { _id: '201', name: 'T-Shirts & Polos' },
+      { _id: '202', name: 'Shirts' },
+      { _id: '203', name: 'Jeans & Trousers' },
+      { _id: '204', name: 'Kurtas & Ethnic Wear' },
+      { _id: '205', name: 'Jackets & Hoodies' }
+    ],
+    // Women subcategories
+    '3': [
+      { _id: '301', name: 'Sarees & Ethnic Wear' },
+      { _id: '302', name: 'Kurtis & Tunics' },
+      { _id: '303', name: 'Tops & T-Shirts' },
+      { _id: '304', name: 'Dresses & Jumpsuits' },
+      { _id: '305', name: 'Leggings & Palazzos' }
+    ]
+  };
+
+  useEffect(() => {
+    const fetchCategoriesAndBrands = async () => {
+      try {
+        // Fetch Categories
+        const categoryRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/category/show`);
+        if (categoryRes.ok) {
+          const categoryData = await categoryRes.json();
+          setCategories(categoryData.result || mockCategories);
+        } else {
+          // Use mock data if API fails
+          console.warn('Failed to fetch categories, using mock data:', categoryRes.status);
+          setCategories(mockCategories);
+        }
+
+        // Always use only Vastrashahi brand
+        setBrands(mockBrands);
+      } catch (error) {
+        // Use mock data if API fails
+        console.error('Error fetching categories:', error);
+        setCategories(mockCategories);
+        setBrands(mockBrands);
+        toast.error('Error fetching data, using mock data instead');
+        console.error(error);
+      }
+    };
+
+    fetchCategoriesAndBrands();
+  }, []);
+
+  // Modified useEffect to better handle parent-child relationship
+  useEffect(() => {
+    if (selectedParentCategory) {
+      // For mock data (if API fails)
+      if (subcategoriesMap[selectedParentCategory]) {
+        // Use our predefined subcategories map
+        setSubcategories(subcategoriesMap[selectedParentCategory]);
+        
+        // Find the corresponding parent category
+        const parentCategory = categories.find(cat => cat._id === selectedParentCategory);
+        if (parentCategory) {
+          setFormData(prev => ({
+            ...prev,
+            parent: parentCategory.parent || parentCategory.name,
+            children: '',
+            // Reset the selected subcategory when parent changes
+            category: ''
+          }));
+        }
+      } else {
+        // Try to find the parent category in the fetched categories
+        const category = categories.find(cat => cat._id === selectedParentCategory);
+        if (category && category.children && Array.isArray(category.children)) {
+          // Convert string subcategories to objects with _id and name for the dropdown
+          const subcats = category.children.map((child, index) => ({
+            _id: `${selectedParentCategory}-${index}`,
+            name: child
+          }));
+          setSubcategories(subcats);
+          
+          setFormData(prev => ({
+            ...prev,
+            parent: category.parent,
+            children: '',
+            // Reset the selected subcategory when parent changes
+            category: ''
+          }));
+        } else {
+          setSubcategories([]);
+        }
+      }
+    } else {
+      setSubcategories([]);
+      // Clear parent, children, category when parent category is deselected
+      setFormData(prev => ({
+        ...prev,
+        parent: '',
+        children: '',
+        category: ''
+      }));
+    }
+  }, [selectedParentCategory, categories]);
+
+  // Handle form field changes
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle parent category change
+  const handleParentCategoryChange = (e) => {
+    const categoryId = e.target.value;
+    setSelectedParentCategory(categoryId);
+    setFormData(prev => ({
+      ...prev,
+      category: '', // Reset subcategory when parent changes
+      parent: categoryId
+    }));
+  };
+
+  const handleMainImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const formDataImg = new FormData();
+    formDataImg.append('image', file);
+    
+    setMainImageLoading(true);
+    
+    try {
+      const response = await fetch('/api/cloudinary/add-img', {
+        method: 'POST',
+        body: formDataImg,
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setMainImage(data.data.url);
+        setFormData(prev => ({
+          ...prev,
+          img: data.data.url
+        }));
+        toast.success('Main image uploaded successfully');
+      } else {
+        toast.error('Failed to upload main image');
+      }
+    } catch (error) {
+      console.error('Error uploading main image:', error);
+      toast.error('Error uploading main image');
+    } finally {
+      setMainImageLoading(false);
+    }
+  };
+
+  const handleAdditionalImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setImageLoading(true);
+    
+    try {
+      const uploadPromises = files.map(file => {
+        const formDataImg = new FormData();
+        formDataImg.append('image', file);
+        
+        return fetch('/api/cloudinary/add-img', {
+          method: 'POST',
+          body: formDataImg,
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            return {
+              color: {
+                name: '',
+                clrCode: ''
+              },
+              img: data.data.url,
+              sizes: []
+            };
+          }
+          throw new Error('Failed to upload image');
+        });
+      });
+      
+      const newImages = await Promise.all(uploadPromises);
+      
+      setUploadedImages(prev => [...prev, ...newImages]);
+      setFormData(prev => ({
+        ...prev,
+        imageURLs: [...prev.imageURLs, ...newImages]
+      }));
+      
+      toast.success(`${newImages.length} additional images uploaded successfully`);
+    } catch (error) {
+      console.error('Error uploading additional images:', error);
+      toast.error('Error uploading additional images');
+    } finally {
+      setImageLoading(false);
+    }
+  };
+
+  const handleRemoveImage = (index) => {
+    const updatedImages = [...uploadedImages];
+    updatedImages.splice(index, 1);
+    setUploadedImages(updatedImages);
+    
+    setFormData(prev => ({
+      ...prev,
+      imageURLs: updatedImages
+    }));
+  };
+
+  const handleColorChange = (index, field, value) => {
+    const updatedImages = [...uploadedImages];
+    updatedImages[index].color[field] = value;
+    setUploadedImages(updatedImages);
+    
+    setFormData(prev => ({
+      ...prev,
+      imageURLs: updatedImages
+    }));
+  };
+
+  // Handle image uploads
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Create an array of image preview URLs
+    const newImagePreviews = files.map(file => URL.createObjectURL(file));
+    
+    setSelectedImages(prev => [...prev, ...files]);
+    setImagePreviews(prev => [...prev, ...newImagePreviews]);
+  };
+  
+  // Remove an image from the selection
+  const removeImage = (index) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    
+    // Revoke the object URL to avoid memory leaks
+    URL.revokeObjectURL(imagePreviews[index]);
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle size selection
+  const handleSizeChange = (sizeId) => {
+    // Check if the size is already selected
+    if (formData.sizes.includes(sizeId)) {
+      // Remove the size
+      setFormData(prev => ({
+        ...prev,
+        sizes: prev.sizes.filter(size => size !== sizeId)
+      }));
+    } else {
+      // Add the size
+      setFormData(prev => ({
+        ...prev,
+        sizes: [...prev.sizes, sizeId]
+      }));
+    }
+  };
+
+  // Handle color selection
+  const handleProductColorChange = (colorId) => {
+    // Check if the color is already selected
+    if (formData.colors.includes(colorId)) {
+      // Remove the color
+      setFormData(prev => ({
+        ...prev,
+        colors: prev.colors.filter(color => color !== colorId)
+      }));
+    } else {
+      // Add the color
+      setFormData(prev => ({
+        ...prev,
+        colors: [...prev.colors, colorId]
+      }));
+    }
+  };
+
+  // Validation function
+  const validateForm = () => {
+    let isValid = true;
+    let errorMessage = '';
+
+    if (formData.title.trim() === '') {
+      errorMessage = 'Product title is required';
+      isValid = false;
+    } else if (formData.price.trim() === '') {
+      errorMessage = 'Product price is required';
+      isValid = false;
+    } else if (formData.quantity.trim() === '') {
+      errorMessage = 'Product quantity is required';
+      isValid = false;
+    } else if (formData.description.trim() === '') {
+      errorMessage = 'Product description is required';
+      isValid = false;
+    } else if (formData.parent === '') {
+      errorMessage = 'Please select a category';
+      isValid = false;
+    } else if (formData.children === '') {
+      errorMessage = 'Please select a subcategory';
+      isValid = false;
+    } else if (selectedImages.length === 0) {
+      errorMessage = 'Please upload at least one product image';
+      isValid = false;
+    } else if (formData.sizes.length === 0) {
+      errorMessage = 'Please select at least one size';
+      isValid = false;
+    } else if (formData.colors.length === 0) {
+      errorMessage = 'Please select at least one color';
+      isValid = false;
+    }
+
+    if (!isValid) {
+      toast.error(errorMessage);
+    }
+
+    return isValid;
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    
+    try {
+      // Validate form
+      const missingFields = [];
+      
+      if (!formData.title.trim()) missingFields.push('title');
+      if (!formData.price) missingFields.push('price');
+      if (!selectedParentCategory) missingFields.push('category');
+      if (!formData.category) missingFields.push('subcategory');
+      if (selectedImages.length === 0) missingFields.push('at least one image');
+      
+      if (missingFields.length > 0) {
+        toast.error(`Please fill in required fields: ${missingFields.join(', ')}`);
+        setSubmitting(false);
+        return;
+      }
+      
+      // Upload images if any newly selected
+      if (selectedImages.length > 0) {
+        toast.info('Uploading images...');
+        // Simulate image upload delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // For this simulation, we'll create fake URLs for the uploaded images
+        const uploadedUrls = selectedImages.map((_, index) => 
+          `https://example.com/images/product-${Date.now()}-${index}.jpg`
+        );
+        
+        setUploadedImageUrls(uploadedUrls);
+        console.log('Uploaded image URLs:', uploadedUrls);
+      }
+      
+      // Use a default image if no images are selected
+      const finalImageUrls = uploadedImageUrls.length > 0 ? 
+        uploadedImageUrls : 
+        ['https://via.placeholder.com/400x400'];
+      
+      // If we had to set default images and they weren't already in state
+      if (uploadedImageUrls.length === 0) {
+        setUploadedImageUrls(finalImageUrls);
+      }
+      
+      // Format the image URLs properly as objects with color info
+      // This MUST match the Mongoose Schema structure exactly:
+      // imageURLs: [{
+      //   color: { name: String, clrCode: String },
+      //   img: String,
+      //   sizes: [String]
+      // }]
+      const imageURLsArray = finalImageUrls.map(url => ({
+        color: {
+          name: '',
+          clrCode: ''
+        },
+        img: url,
+        sizes: []
+      }));
+      
+      console.log('Image URLs array structure:', JSON.stringify(imageURLsArray, null, 2));
+      
+      // Define apiBaseUrl before using it
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
+      console.log('Submitting product to:', `${apiBaseUrl}/product/add`);
+      
+      // Debug the form data before submission
+      console.log('Form data before submission:', {
+        title: formData.title,
+        parent: formData.parent,
+        children: formData.children,
+        selectedParentCategory,
+        selectedCategory: formData.category
+      });
+      console.log('Categories data:', categories);
+      console.log('Subcategories data:', subcategories);
+      
+      // Ensure we have valid parent and children values
+      const selectedCategory = categories.find(c => c._id === selectedParentCategory);
+      const selectedSubcat = subcategories.find(s => s._id === formData.category);
+      
+      const parentName = selectedCategory ? (selectedCategory.parent || selectedCategory.name) : 'Uncategorized';
+      const childName = selectedSubcat ? selectedSubcat.name : '';
+      
+      // Validate the ObjectIds
+      if (!isValidObjectId(selectedParentCategory)) {
+        console.error('Invalid category ObjectId:', selectedParentCategory);
+        toast.error('Invalid category ID format. Please try again or select a different category.');
+        setSubmitting(false);
+        return;
+      }
+      
+      // Create product data object for JSON submission
+      const productDataObject = {
+        title: formData.title,
+        price: parseFloat(formData.price),
+        discount: formData.discountPercentage ? parseFloat(formData.discountPercentage) : 0,
+        quantity: parseInt(formData.quantity) || 1,
+        description: formData.description || 'Product description',
+        // Required fields from model
+        unit: 'piece', // Required by schema
+        img: finalImageUrls[0], // Primary image
+        parent: parentName,
+        children: childName,
+        status: 'in-stock',
+        productType: 'fashion',
+        
+        // Category - using exact field names from schema
+        category: {
+          name: parentName,
+          id: selectedParentCategory  // This is already a valid ObjectId
+        },
+        
+        // Brand - using exact field names from schema
+        brand: {
+          name: 'Vastrashahi',
+          id: selectedParentCategory // Using categoryId as a valid ObjectId for brand
+        },
+        
+        // Image URLs with proper structure
+        imageURLs: imageURLsArray,
+        
+        // Additional required fields
+        sizes: formData.sizes || [],
+        tags: formData.colors || [], // Use colors as tags
+        additionalInformation: [{
+          key: 'Material',
+          value: 'Cotton'
+        }]
+      };
+      
+      // Add sku if needed (optional in schema)
+      productDataObject.sku = `SKU-${Date.now().toString().slice(-6)}`;
+      
+      // Add slug from title (optional in schema)
+      productDataObject.slug = formData.title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-');
+      
+      console.log('Product data object:', productDataObject);
+      
+      // Validate the product data structure
+      console.log('Product data structure:', JSON.stringify(productDataObject, null, 2));
+      
+      // Double check imageURLs structure
+      if (!Array.isArray(productDataObject.imageURLs)) {
+        console.error('imageURLs is not an array!');
+        toast.error('Image data is not formatted correctly. Please try again.');
+        setSubmitting(false);
+        return;
+      }
+      
+      // Send product data to server as JSON
+      let response;
+      try {
+        response = await fetch(`${apiBaseUrl}/product/add`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(productDataObject)
+        });
+        
+        // If the main endpoint fails, try an alternative
+        if (!response.ok && response.status === 404) {
+          console.log('First product endpoint failed, trying alternative...');
+          response = await fetch(`${apiBaseUrl}/products`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(productDataObject)
+          });
+        }
+        
+        console.log('Response status:', response.status);
+      } catch (apiError) {
+        console.error('API request failed:', apiError);
+        toast.error(`API request failed: ${apiError.message || 'Network error'}`);
+        setSubmitting(false);
+        return;
+      }
+      
+      if (response.ok) {
+        toast.success('Product added successfully!');
+        
+        // Reset form - properly initialize all fields to prevent controlled/uncontrolled input issues
+        const resetFormData = {
+          title: '',
+          price: '',
+          discountPercentage: '',
+          quantity: '1',
+          description: '',
+          category: '',
+          brand: '0',
+          type: '',
+          sizes: [],
+          colors: [],
+          parent: '',
+          children: ''
+        };
+        
+        setFormData(resetFormData);
+        setSelectedParentCategory('');
+        setSelectedImages([]);
+        setImagePreviews([]);
+        setUploadedImageUrls([]);
+        setSubcategories([]);
+      } else {
+        let errorMessage = 'Failed to add product';
+        try {
+          const errorData = await response.json();
+          console.error('Error adding product:', errorData);
+          
+          // Log first error message in detail
+          if (errorData.errorMessages && errorData.errorMessages.length > 0) {
+            console.error('First validation error details:', errorData.errorMessages[0]);
+          }
+          
+          console.error('Validation errors:', errorData.errorMessages);
+          
+          errorMessage = errorData.message || 'Unknown server error';
+          
+          // Show more detailed error messages if available
+          if (errorData.errorMessages && errorData.errorMessages.length > 0) {
+            errorMessage += ': ' + errorData.errorMessages.join(', ');
+            
+            // Log detailed info about what we tried to send vs what was expected
+            console.log('Detailed product data that failed validation:', JSON.stringify(productDataObject, null, 2));
+          }
+        } catch (jsonError) {
+          console.error('Error parsing error response:', jsonError);
+        }
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      console.error('Error adding product:', error);
+      toast.error(`Failed to add product: ${error.message || 'Unknown error'}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <ProtectedRoute>
+      <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Add New Product</h1>
+          <Link href="/products" className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <FiX className="mr-2 -ml-1 h-5 w-5" />
+          Cancel
+        </Link>
+      </div>
+
+        <div className="container mx-auto px-4 py-8">
+          <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Product Title */}
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2" htmlFor="title">
+                  Product Title *
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  value={formData.title || ''}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              
+              {/* Price */}
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2" htmlFor="price">
+                  Price (₹) *
+                </label>
+                <input
+                  type="number"
+                  id="price"
+                  name="price"
+                  value={formData.price || ''}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="0"
+                  required
+                />
+              </div>
+              
+              {/* Discount Percentage */}
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2" htmlFor="discountPercentage">
+                  Discount Percentage
+                </label>
+                <input
+                  type="number"
+                  id="discountPercentage"
+                  name="discountPercentage"
+                  value={formData.discountPercentage || ''}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="0"
+                  max="100"
+                />
+              </div>
+              
+              {/* Quantity */}
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2" htmlFor="quantity">
+                  Quantity *
+                </label>
+                <input
+                  type="number"
+                  id="quantity"
+                  name="quantity"
+                  value={formData.quantity || '1'}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min="1"
+                  required
+                />
+              </div>
+            </div>
+            
+            {/* Category Selection */}
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2">
+                Category Selection *
+              </label>
+              <div className="border border-gray-300 rounded-md p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Men Category */}
+                  <div 
+                    className={`p-3 border rounded-md cursor-pointer ${selectedParentCategory === '2' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}
+                    onClick={() => handleParentCategoryChange({ target: { value: '2' } })}
+                  >
+                    <h3 className="font-bold text-lg mb-2">👨 Men</h3>
+                    <ul className="list-disc pl-5 text-sm">
+                      <li>T-Shirts & Polos</li>
+                      <li>Shirts</li>
+                      <li>Jeans & Trousers</li>
+                      <li>Kurtas & Ethnic Wear</li>
+                      <li>Jackets & Hoodies</li>
+                    </ul>
+                  </div>
+
+                  {/* Women Category */}
+                  <div 
+                    className={`p-3 border rounded-md cursor-pointer ${selectedParentCategory === '3' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}
+                    onClick={() => handleParentCategoryChange({ target: { value: '3' } })}
+                  >
+                    <h3 className="font-bold text-lg mb-2">👩‍🦰 Women</h3>
+                    <ul className="list-disc pl-5 text-sm">
+                      <li>Sarees & Ethnic Wear</li>
+                      <li>Kurtis & Tunics</li>
+                      <li>Tops & T-Shirts</li>
+                      <li>Dresses & Jumpsuits</li>
+                      <li>Leggings & Palazzos</li>
+                    </ul>
+                  </div>
+
+                  {/* Bags Category */}
+                  <div 
+                    className={`p-3 border rounded-md cursor-pointer ${selectedParentCategory === '1' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}
+                    onClick={() => handleParentCategoryChange({ target: { value: '1' } })}
+                  >
+                    <h3 className="font-bold text-lg mb-2">👜 Bags</h3>
+                    <ul className="list-disc pl-5 text-sm">
+                      <li>HandBag</li>
+                      <li>Ladies purchase</li>
+                      <li>Traveling Bag</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Selected Category Feedback */}
+              {selectedParentCategory && (
+                <div className="mt-2 text-sm text-blue-600">
+                  Selected Category: {categories.find(c => c._id === selectedParentCategory)?.parent || 'Unknown'}
+                </div>
+              )}
+            </div>
+            
+            {/* Hidden Parent Category Select - for form validation */}
+            <input 
+              type="hidden" 
+              name="parentCategory" 
+              value={selectedParentCategory} 
+              required 
+            />
+            
+            {/* Subcategory */}
+            <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2" htmlFor="category">
+                  Subcategory *
+                </label>
+                {selectedParentCategory ? (
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {subcategories && subcategories.length > 0 ? (
+                        subcategories.map((subcategory, index) => (
+                          <button
+                            key={subcategory._id}
+                            type="button"
+                            className={`p-2 border rounded-md text-left ${
+                              formData.category === subcategory._id 
+                                ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                                : 'border-gray-300 hover:bg-gray-50'
+                            }`}
+                            onClick={() => {
+                              const parentCategory = categories.find(cat => cat._id === selectedParentCategory);
+                              const parentName = parentCategory ? (parentCategory.parent || parentCategory.name) : '';
+                              
+                              setFormData(prev => ({
+                                ...prev,
+                                category: subcategory._id,
+                                children: subcategory.name,
+                                parent: parentName
+                              }));
+                            }}
+                          >
+                            <span className="inline-block bg-gray-200 rounded-full h-6 w-6 text-center mr-2">
+                              {index + 1}
+                            </span>
+                            {subcategory.name}
+                          </button>
+                        ))
+                      ) : (
+                        <p className="text-gray-500">No subcategories available for this category</p>
+                      )}
+                    </div>
+                    
+                    {/* Selected Subcategory Feedback */}
+                    {formData.category && formData.children && (
+                      <div className="mt-2 text-sm text-blue-600">
+                        Selected Subcategory: {formData.children}
+                      </div>
+                    )}
+                    
+                    {/* Hidden input for form validation */}
+                    <input
+                      type="hidden"
+                      name="category"
+                      value={formData.category}
+                      required
+                    />
+                  </>
+                ) : (
+                  <p className="text-gray-500">Please select a category first</p>
+                )}
+              </div>
+            
+              {/* Brand */}
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2" htmlFor="brand">
+                  Brand
+                </label>
+                <select
+                  id="brand"
+                  name="brand"
+                  value={formData.brand}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled
+                >
+                  <option value="0">Vastrashahi</option>
+                </select>
+              </div>
+              
+              {/* Product Type */}
+              <div className="mb-4">
+                <label className="block text-gray-700 font-medium mb-2" htmlFor="type">
+                  Product Type
+                </label>
+                <input
+                  type="text"
+                  id="type"
+                  name="type"
+                  value={formData.type}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="e.g., Regular, Premium, etc."
+                />
+              </div>
+            </div>
+            
+            {/* Sizes Section */}
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2">Available Sizes</label>
+              <div className="flex flex-wrap gap-2">
+                {availableSizes.map(size => (
+                  <button
+                    key={size.id}
+                    type="button"
+                    onClick={() => handleSizeChange(size.id)}
+                    className={`px-3 py-1 rounded border ${
+                      formData.sizes.includes(size.id)
+                        ? 'bg-blue-500 text-white border-blue-500'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {size.label}
+                  </button>
+                ))}
+              </div>
+              {!formData.sizes.length && (
+                <p className="text-sm text-gray-500 mt-1">Select at least one size</p>
+              )}
+            </div>
+            
+            {/* Colors Section */}
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2">Available Colors</label>
+              <div className="flex flex-wrap gap-3">
+                {availableColors.map(color => (
+                  <div
+                    key={color.id}
+                    onClick={() => handleProductColorChange(color.id)}
+                    className={`w-8 h-8 rounded-full cursor-pointer flex items-center justify-center border ${
+                      formData.colors.includes(color.id) ? 'border-2 border-blue-500' : 'border-gray-300'
+                    }`}
+                    style={{ backgroundColor: color.code }}
+                    title={color.label}
+                  >
+                    {formData.colors.includes(color.id) && (
+                      <span className="text-white text-xs">✓</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {!formData.colors.length && (
+                <p className="text-sm text-gray-500 mt-1">Select at least one color</p>
+              )}
+            </div>
+            
+            {/* Description */}
+            <div className="mb-4">
+              <label className="block text-gray-700 font-medium mb-2" htmlFor="description">
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description || ''}
+                onChange={handleChange}
+                rows="4"
+                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              ></textarea>
+            </div>
+            
+            {/* Image Upload */}
+            <div className="mb-6">
+              <label className="block text-gray-700 font-medium mb-2">
+                Product Images *
+              </label>
+              <div className="flex items-center">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                      <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                    </svg>
+                    <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
+                    <p className="text-xs text-gray-500">PNG, JPG or JPEG (MAX. 5MB)</p>
+                  </div>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                  />
+                </label>
+              </div>
+            
+              {/* Image Previews */}
+              {imagePreviews.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={preview}
+                        alt={`Preview ${index + 1}`}
+                        className="h-32 w-full object-cover rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          
+            {/* Submit Button */}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                className="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 transition duration-300 disabled:bg-blue-300"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Adding Product...
+                  </span>
+                ) : (
+                  'Add Product'
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </ProtectedRoute>
+  );
+} 
+
+export default AddProduct; 

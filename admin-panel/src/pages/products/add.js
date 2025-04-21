@@ -1,693 +1,530 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { toast } from 'react-toastify';
 import { productsAPI } from '../../services/api';
 import Link from 'next/link';
-import { FiSave, FiX } from 'react-icons/fi';
+import { FiSave, FiX, FiUpload, FiTrash2 } from 'react-icons/fi';
 
-function AddProduct() {
+// Helper function to validate MongoDB ObjectId
+const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
+
+// Mock data (for fallback)
+const mockCategories = [
+  { _id: '1', parent: 'Bags', name: 'Bags' },
+  { _id: '2', parent: 'Men', name: 'Men' },
+  { _id: '3', parent: 'Women', name: 'Women' },
+];
+
+const mockSubcategories = {
+  '1': [
+    { _id: '101', name: 'HandBag' },
+    { _id: '102', name: 'Ladies Purse' },
+    { _id: '103', name: 'Traveling Bag' },
+  ],
+  '2': [
+    { _id: '201', name: 'T-Shirts & Polos' },
+    { _id: '202', name: 'Shirts' },
+    { _id: '203', name: 'Jeans & Trousers' },
+  ],
+  '3': [
+    { _id: '301', name: 'Sarees & Ethnic Wear' },
+    { _id: '302', name: 'Kurtis & Tunics' },
+    { _id: '303', name: 'Tops & T-Shirts' },
+  ],
+};
+
+const mockBrands = [{ _id: '642508be253d81bc860d4d24', name: 'Vastrashahi' }];
+
+const AddProduct = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [brands] = useState(mockBrands); // Only Vastrashahi
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
     price: '',
-    discount: '0',
+    discountPercentage: '',
+    quantity: '1',
+    description: '',
+    parentCategory: '',
     category: '',
-    brand: '',
-    stock: '1',
-    color: '',
-    size: '',
+    sizes: [],
+    colors: [],
     status: 'in-stock',
     featured: false,
-    images: [],
-    productType: 'clothing',
-    unit: 'pcs',
-    children: 'Regular',
-    parent: 'Apparel',
   });
-  const [uploadedImages, setUploadedImages] = useState([]);
-  const [imageLoading, setImageLoading] = useState(false);
+  const [images, setImages] = useState([]); // Array of { file, preview }
+  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
 
+  // Available sizes and colors
+  const availableSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  const availableColors = [
+    { id: 'red', label: 'Red', code: '#FF0000' },
+    { id: 'blue', label: 'Blue', code: '#0000FF' },
+    { id: 'green', label: 'Green', code: '#008000' },
+    { id: 'black', label: 'Black', code: '#000000' },
+    { id: 'white', label: 'White', code: '#FFFFFF' },
+  ];
+
+  // Fetch categories
   useEffect(() => {
+    let isMounted = true;
+    const fetchCategories = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/category/show`);
+        if (response.ok) {
+          const data = await response.json();
+          if (isMounted) setCategories(data.result || mockCategories);
+        } else {
+          throw new Error('Failed to fetch categories');
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        if (isMounted) {
+          setCategories(mockCategories);
+          toast.error('Failed to fetch categories, using mock data');
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
     fetchCategories();
-    fetchBrands();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const fetchCategories = async () => {
-    try {
-      setLoading(true);
-      // Get categories from the API
-      const response = await productsAPI.getCategories();
-      
-      let categoryData = [];
-      
-      // Handle different API response structures
-      if (response && Array.isArray(response)) {
-        categoryData = response;
-      } else if (response?.categories && Array.isArray(response.categories)) {
-        categoryData = response.categories;
-      } else if (response?.data && Array.isArray(response.data)) {
-        categoryData = response.data;
+  // Update subcategories based on parent category
+  useEffect(() => {
+    if (formData.parentCategory) {
+      const selectedParentCategory = categories.find((cat) => cat._id === formData.parentCategory);
+      if (selectedParentCategory && Array.isArray(selectedParentCategory.children)) {
+        // Transform children array into the format expected by the subcategories dropdown
+        const subcategoriesData = selectedParentCategory.children.map((childName, index) => ({
+          _id: `${selectedParentCategory._id}-${index}`,
+          name: childName
+        }));
+        setSubcategories(subcategoriesData);
+        setFormData(prev => ({ ...prev, category: '' }));
       } else {
-        // Fallback to default categories
-        categoryData = [
-          { _id: 'men', name: 'Men', isMain: true },
-          { _id: 'women', name: 'Women', isMain: true },
-          { _id: 'bags', name: 'Bags', isMain: true },
-          // Subcategories for Men
-          { _id: 'men-tshirts', name: 'T-Shirts', parentCategory: 'men' },
-          { _id: 'men-shirts', name: 'Shirts', parentCategory: 'men' },
-          { _id: 'men-jeans', name: 'Jeans', parentCategory: 'men' },
-          // Subcategories for Women
-          { _id: 'women-dresses', name: 'Dresses', parentCategory: 'women' },
-          { _id: 'women-tops', name: 'Tops', parentCategory: 'women' },
-          { _id: 'women-jeans', name: 'Jeans', parentCategory: 'women' },
-          // Subcategories for Bags
-          { _id: 'bags-handbags', name: 'Handbags', parentCategory: 'bags' },
-          { _id: 'bags-backpacks', name: 'Backpacks', parentCategory: 'bags' }
-        ];
+        setSubcategories([]);
+        setFormData(prev => ({ ...prev, category: '' }));
       }
-      
-      console.log('Categories loaded:', categoryData.length);
-      setCategories(categoryData);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      toast.error('Failed to load categories');
-      
-      // Fallback to default categories
-      setCategories([
-        { _id: 'men', name: 'Men', isMain: true },
-        { _id: 'women', name: 'Women', isMain: true },
-        { _id: 'bags', name: 'Bags', isMain: true }
-      ]);
-    } finally {
-      setLoading(false);
+    } else {
+      setSubcategories([]);
+      setFormData(prev => ({ ...prev, category: '' }));
     }
-  };
+  }, [formData.parentCategory, categories]);
 
-  const fetchBrands = async () => {
-    try {
-      // Use real MongoDB ObjectId formatted strings
-      setBrands([
-        { _id: '646dd899dfd90c4e8f6dcbd3', name: 'Nike' },
-        { _id: '646dd899dfd90c4e8f6dcbd4', name: 'Adidas' },
-        { _id: '646dd899dfd90c4e8f6dcbd5', name: 'Puma' },
-        { _id: '646dd899dfd90c4e8f6dcbd6', name: 'Reebok' }
-      ]);
-    } catch (error) {
-      console.error('Error fetching brands:', error);
-      toast.error('Failed to load brands');
-    }
-  };
+  // Clean up image previews on unmount
+  useEffect(() => {
+    return () => {
+      images.forEach(({ preview }) => URL.revokeObjectURL(preview));
+    };
+  }, [images]);
 
+  // Handle form field changes
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle size toggle
+  const handleSizeChange = (size) => {
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      sizes: prev.sizes.includes(size)
+        ? prev.sizes.filter((s) => s !== size)
+        : [...prev.sizes, size],
     }));
   };
 
-  const handleImageUpload = async (e) => {
+  // Handle color toggle
+  const handleColorChange = (colorId) => {
+    setFormData((prev) => ({
+      ...prev,
+      colors: prev.colors.includes(colorId)
+        ? prev.colors.filter((c) => c !== colorId)
+        : [...prev.colors, colorId],
+    }));
+  };
+
+  // Handle image selection
+  const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
-    setImageLoading(true);
-    
-    try {
-      // Instead of object URLs which won't work with the backend validation
-      // Use placeholder real URLs instead - in a real app, you would upload to cloudinary etc.
-      const placeholderUrls = [
-        "https://i.ibb.co/tpypd3B/cpu-5.png",
-        "https://i.ibb.co/wwNDDSG/cpu-6.png",
-        "https://i.ibb.co/sHRhjSC/cpu-7.png",
-        "https://i.ibb.co/vDrwNFX/cpu-8.png",
-        "https://i.ibb.co/VMh8D7h/cpu-1.png"
-      ];
-      
-      const newImages = files.map((file, index) => ({
-        url: placeholderUrls[index % placeholderUrls.length], // Cycle through placeholder URLs
-        file: file,
-        name: file.name
-      }));
-      
-      setUploadedImages(prev => [...prev, ...newImages]);
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, ...newImages.map(img => img.url)]
-      }));
-      
-      toast.success('Images added for upload');
-    } catch (error) {
-      console.error('Error uploading images:', error);
-      toast.error('Failed to upload images');
-    } finally {
-      setImageLoading(false);
+    if (files.length + images.length > 5) {
+      toast.warning('Maximum 5 images allowed');
+      return;
     }
-  };
-
-  const removeImage = (index) => {
-    setUploadedImages(prev => prev.filter((_, i) => i !== index));
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+    const newImages = files.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
     }));
+    setImages((prev) => [...prev, ...newImages]);
   };
 
+  // Remove image
+  const removeImage = (index) => {
+    setImages((prev) => {
+      const updated = [...prev];
+      URL.revokeObjectURL(updated[index].preview);
+      updated.splice(index, 1);
+      return updated;
+    });
+  };
+
+  // Validate form
   const validateForm = () => {
-    if (!formData.title.trim()) {
-      toast.error('Product title is required');
-      return false;
+    if (!formData.title.trim()) return 'Product title is required';
+    if (!formData.price || parseFloat(formData.price) <= 0) return 'Valid price is required';
+    if (formData.discountPercentage && (parseFloat(formData.discountPercentage) < 0 || parseFloat(formData.discountPercentage) > 100)) {
+      return 'Discount percentage must be between 0 and 100';
     }
-    if (!formData.description.trim()) {
-      toast.error('Product description is required');
-      return false;
-    }
-    if (!formData.price || isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      toast.error('Please enter a valid price');
-      return false;
-    }
-    if (!formData.category) {
-      toast.error('Please select a category');
-      return false;
-    }
-    if (formData.images.length === 0) {
-      toast.error('At least one product image is required');
-      return false;
-    }
-    return true;
+    if (!formData.quantity || parseInt(formData.quantity) < 1) return 'Valid quantity is required';
+    if (!formData.parentCategory) return 'Parent category is required';
+    if (!formData.category) return 'Subcategory is required';
+    if (images.length === 0) return 'At least one image is required';
+    if (!formData.description.trim() || formData.description.length < 20) return 'Description must be at least 20 characters';
+    return null;
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
-    
-    setLoading(true);
-    
+    const validationError = validateForm();
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      // Find the selected category and brand objects
-      const selectedCategory = categories.find(cat => cat._id === formData.category) || { 
-        name: 'Men', 
-        _id: '646dd899dfd90c4e8f6dcbcf'  // Fallback to a valid ObjectId
-      };
+      // Upload images
+      const uploadedImages = [];
+      for (const { file } of images) {
+        const formData = new FormData();
+        formData.append('image', file);
+        const response = await fetch('/api/cloudinary/add-img', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!response.ok) throw new Error('Failed to upload image');
+        const result = await response.json();
+        if (result.success) {
+          uploadedImages.push({
+            color: { name: 'Default', clrCode: '#000000' },
+            img: result.data.url,
+            sizes: formData.sizes,
+          });
+        } else {
+          throw new Error('Image upload failed');
+        }
+      }
+
+      // Construct product data
+      const selectedParentCategory = categories.find((cat) => cat._id === formData.parentCategory);
+      const selectedSubcategory = subcategories.find((sub) => sub._id === formData.category);
       
-      const selectedBrand = brands.find(brand => brand._id === formData.brand) || { 
-        name: 'Nike', 
-        _id: '646dd899dfd90c4e8f6dcbd3'  // Fallback to a valid ObjectId
-      };
-      
-      // These are real working image URLs from the product examples
-      const validImageUrls = [
-        "https://i.ibb.co/tpypd3B/cpu-5.png",
-        "https://i.ibb.co/wwNDDSG/cpu-6.png",
-        "https://i.ibb.co/sHRhjSC/cpu-7.png"
-      ];
-      
-      // Convert string values to appropriate types and structure the data correctly
       const productData = {
+        sku: `VS-${Date.now().toString().slice(-6)}`,
         title: formData.title,
         description: formData.description,
-        price: Number(formData.price),
-        discount: Number(formData.discount),
-        quantity: Number(formData.stock),
-        featured: formData.featured,
-        productType: formData.productType,
-        unit: formData.unit,
-        children: formData.children,
-        parent: formData.parent,
+        price: parseFloat(formData.price),
+        discount: parseFloat(formData.discountPercentage) || 0,
+        quantity: parseInt(formData.quantity),
         status: formData.status,
-        slug: formData.title.toLowerCase().replace(/ /g, '-'),
-        img: validImageUrls[0], // Use a working image URL
-        sku: 'SKU' + Math.floor(Math.random() * 10000),
+        featured: formData.featured,
+        parent: selectedParentCategory?.parent || '',
+        children: selectedSubcategory?.name || '',
+        unit: 'piece',
+        productType: 'fashion',
         category: {
-          id: selectedCategory._id, // Use the actual ID from the object
-          name: selectedCategory.name
+          name: selectedSubcategory?.name || '',
+          id: selectedParentCategory?._id
         },
         brand: {
-          id: selectedBrand._id, // Use the actual ID from the object
-          name: selectedBrand.name
+          name: 'Vastrashahi',
+          id: brands[0]._id,
         },
-        imageURLs: validImageUrls.map(url => ({ img: url })),
-        sizes: formData.size ? [formData.size] : ["M"],
-        tags: [formData.color || "Regular"],
+        img: uploadedImages[0]?.img || '',
+        imageURLs: uploadedImages,
+        slug: formData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
+        tags: formData.colors,
+        sizes: formData.sizes,
       };
-      
-      console.log('Submitting product data:', productData);
-      
-      const response = await productsAPI.createProduct(productData);
-      
-      toast.success('Product created successfully!');
+
+      // Submit product
+      await productsAPI.createProduct(productData);
+      toast.success('Product added successfully!');
       router.push('/products');
     } catch (error) {
       console.error('Error creating product:', error);
-      
-      // Handle and display the validation errors
-      if (error.response?.data?.errorMessages) {
-        error.response.data.errorMessages.forEach(errMsg => {
-          toast.error(`${errMsg.path}: ${errMsg.message}`);
-        });
-      } else {
-        toast.error(error.response?.data?.message || 'Failed to create product');
-      }
+      toast.error(error.message || 'Failed to create product');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  // Add these helper functions for category handling
-  const getMainCategories = () => {
-    return categories.filter(category => 
-      !category.parentCategory || 
-      category.isMain === true
-    );
-  };
-  
-  const getSubcategories = (parentId) => {
-    return categories.filter(category => 
-      category.parentCategory === parentId || 
-      (typeof category.parentCategory === 'object' && category.parentCategory?._id === parentId)
-    );
-  };
-
   return (
-    <div className="p-4 sm:p-6 md:p-8">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Add New Product</h1>
-        <Link href="/products" className="btn btn-outline inline-flex items-center">
-          <FiX className="mr-2" />
-          Cancel
-        </Link>
-      </div>
+    <ProtectedRoute>
+      <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Add New Product</h1>
+          <Link href="/products" className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+            <FiX className="mr-2 -ml-1 h-5 w-5" />
+            Cancel
+          </Link>
+        </div>
 
-      <form onSubmit={handleSubmit} className="card">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Basic Information */}
-          <div className="space-y-4 md:col-span-2">
-            <h2 className="text-xl font-semibold border-b pb-2">Basic Information</h2>
-            
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Product Title */}
             <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Product Title*
+              <label htmlFor="title" className="block text-gray-700 font-medium mb-2">
+                Product Title *
               </label>
               <input
                 type="text"
                 id="title"
                 name="title"
-                className="input mt-1"
                 value={formData.title}
                 onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
-            
+
+            {/* Price */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Description*
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows="4"
-                className="input mt-1"
-                value={formData.description}
-                onChange={handleChange}
-                required
-              ></textarea>
-            </div>
-          </div>
-          
-          {/* Pricing */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold border-b pb-2">Pricing</h2>
-            
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                Price (₹)*
+              <label htmlFor="price" className="block text-gray-700 font-medium mb-2">
+                Price (₹) *
               </label>
               <input
                 type="number"
                 id="price"
                 name="price"
-                className="input mt-1"
                 value={formData.price}
                 onChange={handleChange}
-                min="0"
+                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                min="0.01"
                 step="0.01"
                 required
               />
             </div>
-            
+
+            {/* Discount Percentage */}
             <div>
-              <label htmlFor="discount" className="block text-sm font-medium text-gray-700">
-                Discount (%)
+              <label htmlFor="discountPercentage" className="block text-gray-700 font-medium mb-2">
+                Discount Percentage
               </label>
               <input
                 type="number"
-                id="discount"
-                name="discount"
-                className="input mt-1"
-                value={formData.discount}
+                id="discountPercentage"
+                name="discountPercentage"
+                value={formData.discountPercentage}
                 onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 min="0"
                 max="100"
+                step="0.1"
               />
             </div>
-          </div>
-          
-          {/* Inventory */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold border-b pb-2">Inventory</h2>
-            
+
+            {/* Quantity */}
             <div>
-              <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
-                Stock Quantity*
+              <label htmlFor="quantity" className="block text-gray-700 font-medium mb-2">
+                Quantity *
               </label>
               <input
                 type="number"
-                id="stock"
-                name="stock"
-                className="input mt-1"
-                value={formData.stock}
+                id="quantity"
+                name="quantity"
+                value={formData.quantity}
                 onChange={handleChange}
-                min="0"
+                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                min="1"
                 required
               />
             </div>
-            
+
+            {/* Parent Category */}
             <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700">
-                Status
+              <label htmlFor="parentCategory" className="block text-gray-700 font-medium mb-2">
+                Parent Category *
               </label>
               <select
-                id="status"
-                name="status"
-                className="input mt-1"
-                value={formData.status}
+                id="parentCategory"
+                name="parentCategory"
+                value={formData.parentCategory}
                 onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={loading}
+                required
               >
-                <option value="in-stock">In Stock</option>
-                <option value="out-of-stock">Out of Stock</option>
-                <option value="discontinued">Discontinued</option>
+                <option value="">Select Parent Category</option>
+                {categories.map((category) => (
+                  <option key={category._id} value={category._id}>
+                    {category.parent || category.name}
+                  </option>
+                ))}
               </select>
             </div>
-          </div>
-          
-          {/* Organization */}
-          <div className="space-y-4 md:col-span-2">
-            <h2 className="text-xl font-semibold border-b pb-2">Organization</h2>
-            
-            <div className="mb-4">
-              <label htmlFor="category" className="form-label">Category <span className="text-red-500">*</span></label>
+
+            {/* Subcategory */}
+            <div>
+              <label htmlFor="category" className="block text-gray-700 font-medium mb-2">
+                Subcategory *
+              </label>
               <select
                 id="category"
                 name="category"
-                className="form-input"
                 value={formData.category}
                 onChange={handleChange}
+                className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!formData.parentCategory || subcategories.length === 0}
                 required
               >
-                <option value="">Select a category</option>
-                
-                {/* Main categories */}
-                {getMainCategories().map(category => (
-                  <option 
-                    key={category._id} 
-                    value={category._id}
-                    style={{ fontWeight: 'bold' }}
-                  >
-                    {category.name}
+                <option value="">Select Subcategory</option>
+                {subcategories.map((subcategory) => (
+                  <option key={subcategory._id} value={subcategory._id}>
+                    {subcategory.name}
                   </option>
                 ))}
-                
-                {/* Then subcategories grouped under parent category */}
-                {getMainCategories().map(mainCat => {
-                  const subcategories = getSubcategories(mainCat._id);
-                  if (subcategories.length === 0) return null;
-                  
-                  return (
-                    <optgroup key={`group-${mainCat._id}`} label={`${mainCat.name} Subcategories`}>
-                      {subcategories.map(subCat => (
-                        <option key={subCat._id} value={subCat._id}>
-                          {subCat.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  );
-                })}
               </select>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="brand" className="block text-sm font-medium text-gray-700">
-                  Brand
-                </label>
-                <select
-                  id="brand"
-                  name="brand"
-                  className="input mt-1"
-                  value={formData.brand}
-                  onChange={handleChange}
+          </div>
+
+          {/* Sizes */}
+          <div className="mb-6">
+            <label className="block text-gray-700 font-medium mb-2">Available Sizes</label>
+            <div className="flex flex-wrap gap-2">
+              {availableSizes.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => handleSizeChange(size)}
+                  className={`px-3 py-1 rounded border ${
+                    formData.sizes.includes(size) ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  }`}
                 >
-                  <option value="">Select Brand</option>
-                  {brands.map(brand => (
-                    <option key={brand._id} value={brand._id}>
-                      {brand.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="productType" className="block text-sm font-medium text-gray-700">
-                  Product Type*
-                </label>
-                <select
-                  id="productType"
-                  name="productType"
-                  className="input mt-1"
-                  value={formData.productType}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="clothing">Clothing</option>
-                  <option value="electronics">Electronics</option>
-                  <option value="furniture">Furniture</option>
-                  <option value="beauty">Beauty</option>
-                  <option value="jewelry">Jewelry</option>
-                </select>
-              </div>
-              
-              <div>
-                <label htmlFor="unit" className="block text-sm font-medium text-gray-700">
-                  Unit*
-                </label>
-                <input
-                  type="text"
-                  id="unit"
-                  name="unit"
-                  className="input mt-1"
-                  value={formData.unit}
-                  onChange={handleChange}
-                  placeholder="e.g., pcs, kg, set"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="parent" className="block text-sm font-medium text-gray-700">
-                  Parent Category*
-                </label>
-                <input
-                  type="text"
-                  id="parent"
-                  name="parent"
-                  className="input mt-1"
-                  value={formData.parent}
-                  onChange={handleChange}
-                  placeholder="e.g., Apparel, Footwear"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="children" className="block text-sm font-medium text-gray-700">
-                  Sub Category*
-                </label>
-                <input
-                  type="text"
-                  id="children"
-                  name="children"
-                  className="input mt-1"
-                  value={formData.children}
-                  onChange={handleChange}
-                  placeholder="e.g., T-shirt, Shoes"
-                  required
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="color" className="block text-sm font-medium text-gray-700">
-                  Color
-                </label>
-                <input
-                  type="text"
-                  id="color"
-                  name="color"
-                  className="input mt-1"
-                  value={formData.color}
-                  onChange={handleChange}
-                  placeholder="e.g., Red, Blue, Black"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="size" className="block text-sm font-medium text-gray-700">
-                  Size
-                </label>
-                <input
-                  type="text"
-                  id="size"
-                  name="size"
-                  className="input mt-1"
-                  value={formData.size}
-                  onChange={handleChange}
-                  placeholder="e.g., S, M, L, XL"
-                />
-              </div>
-            </div>
-            
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="featured"
-                name="featured"
-                className="h-4 w-4 text-primary focus:ring-primary/50 border-gray-300 rounded"
-                checked={formData.featured}
-                onChange={handleChange}
-              />
-              <label htmlFor="featured" className="ml-2 block text-sm text-gray-700">
-                Featured Product
-              </label>
+                  {size}
+                </button>
+              ))}
             </div>
           </div>
-          
-          {/* Images */}
-          <div className="space-y-4 md:col-span-2">
-            <h2 className="text-xl font-semibold border-b pb-2">Product Images</h2>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Upload Images
-              </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                <div className="space-y-1 text-center">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    stroke="currentColor"
-                    fill="none"
-                    viewBox="0 0 48 48"
-                  >
-                    <path
-                      d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H8m36-12h-4m-4 0v4m0 0v4m0-4h4m-12 0h4m8 0h4m-4 0v4m0 0v4m0-4h4"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <div className="flex text-sm text-gray-600">
-                    <label
-                      htmlFor="file-upload"
-                      className="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/90 focus-within:outline-none"
-                    >
-                      <span>Upload images</span>
-                      <input
-                        id="file-upload"
-                        name="file-upload"
-                        type="file"
-                        className="sr-only"
-                        onChange={handleImageUpload}
-                        accept="image/*"
-                        multiple
-                        disabled={imageLoading}
-                      />
-                    </label>
-                    <p className="pl-1">or drag and drop</p>
-                  </div>
-                  <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+
+          {/* Colors */}
+          <div className="mb-6">
+            <label className="block text-gray-700 font-medium mb-2">Available Colors</label>
+            <div className="flex flex-wrap gap-3">
+              {availableColors.map((color) => (
+                <div
+                  key={color.id}
+                  onClick={() => handleColorChange(color.id)}
+                  className={`w-8 h-8 rounded-full cursor-pointer border ${
+                    formData.colors.includes(color.id) ? 'border-2 border-blue-500' : 'border-gray-300'
+                  }`}
+                  style={{ backgroundColor: color.code }}
+                  title={color.label}
+                >
+                  {formData.colors.includes(color.id) && <span className="text-white text-xs">✓</span>}
                 </div>
-              </div>
+              ))}
             </div>
-            
-            {imageLoading && (
-              <div className="flex justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          </div>
+
+          {/* Description */}
+          <div className="mb-6">
+            <label htmlFor="description" className="block text-gray-700 font-medium mb-2">
+              Description *
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="4"
+              required
+            />
+          </div>
+
+          {/* Image Upload */}
+          <div className="mb-6">
+            <label className="block text-gray-700 font-medium mb-2">Product Images (Max 5) *</label>
+            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                <FiUpload className="w-8 h-8 mb-4 text-gray-500" />
+                <p className="mb-2 text-sm text-gray-500">
+                  <span className="font-semibold">Click to upload</span> or drag and drop
+                </p>
+                <p className="text-xs text-gray-500">PNG, JPG or JPEG (MAX. 5MB)</p>
               </div>
-            )}
-            
-            {uploadedImages.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
-                {uploadedImages.map((image, index) => (
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                multiple
+                onChange={handleImageChange}
+              />
+            </label>
+
+            {/* Image Previews */}
+            {images.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                {images.map(({ preview }, index) => (
                   <div key={index} className="relative">
-                    <img
-                      src={image.url}
-                      alt={`Product preview ${index + 1}`}
-                      className="h-24 w-full object-cover rounded"
-                    />
+                    <img src={preview} alt={`Preview ${index + 1}`} className="h-32 w-full object-cover rounded-md" />
                     <button
                       type="button"
-                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 transform translate-x-1/2 -translate-y-1/2"
                       onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
                     >
-                      <FiX size={14} />
+                      <FiTrash2 />
                     </button>
                   </div>
                 ))}
               </div>
             )}
           </div>
-          
+
           {/* Submit Button */}
-          <div className="mt-6 md:col-span-2">
+          <div className="flex justify-end">
             <button
               type="submit"
-              className="btn btn-primary w-full md:w-auto"
-              disabled={loading}
+              className="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 disabled:bg-blue-300"
+              disabled={submitting || loading}
             >
-              {loading ? (
+              {submitting ? (
                 <span className="flex items-center">
-                  <div className="animate-spin mr-2 h-4 w-4 border-t-2 border-b-2 border-white rounded-full"></div>
-                  Saving...
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Adding Product...
                 </span>
               ) : (
-                <span className="flex items-center">
-                  <FiSave className="mr-2" />
-                  Save Product
-                </span>
+                'Add Product'
               )}
             </button>
           </div>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-export default function AddProductPage() {
-  return (
-    <ProtectedRoute>
-      <AddProduct />
+        </form>
+      </div>
     </ProtectedRoute>
   );
-} 
+};
+
+export default AddProduct;

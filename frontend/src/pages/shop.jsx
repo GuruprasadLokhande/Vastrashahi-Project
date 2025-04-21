@@ -15,6 +15,7 @@ const ShopPage = ({ query }) => {
   const [priceValue, setPriceValue] = useState([0, 0]);
   const [selectValue, setSelectValue] = useState("");
   const [currPage, setCurrPage] = useState(1);
+  
   // Load the maximum price once the products have been loaded
   useEffect(() => {
     if (!isLoading && !isError && products?.data?.length > 0) {
@@ -106,39 +107,27 @@ const ShopPage = ({ query }) => {
       );
     }
 
-    // category filter
-    if (query.subCategory) {
+    // subcategory filter
+    if (query.subcategory) {
       product_items = product_items.filter(
         (p) =>
           p.children.toLowerCase().replace("&", "").split(" ").join("-") ===
-          query.subCategory
+          query.subcategory
       );
     }
 
     // color filter
     if (query.color) {
       product_items = product_items.filter((product) => {
-        for (let i = 0; i < product.imageURLs.length; i++) {
-          const color = product.imageURLs[i]?.color;
-          if (
-            color &&
-            color?.name.toLowerCase().replace("&", "").split(" ").join("-") ===
-              query.color
-          ) {
-            return true; // match found, include product in result
-          }
+        if (product.imageURLs && product.imageURLs.length > 0) {
+          return product.imageURLs.some(
+            (item) =>
+              item.color &&
+              item.color.name.toLowerCase().replace(" ", "-") === query.color
+          );
         }
         return false; // no match found, exclude product from result
       });
-    }
-
-    // brand filter
-    if (query.brand) {
-      product_items = product_items.filter(
-        (p) =>
-          p.brand.name.toLowerCase().replace("&", "").split(" ").join("-") ===
-          query.brand
-      );
     }
 
     content = (

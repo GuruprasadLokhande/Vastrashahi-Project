@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkUserLoggedIn = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
         const storedUser = localStorage.getItem('admin');
         
         if (token && storedUser) {
@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
           } catch (error) {
             console.error('Failed to parse user data:', error);
             // Clear invalid data
-            localStorage.removeItem('token');
+            localStorage.removeItem('authToken');
             localStorage.removeItem('admin');
             setUser(null);
           }
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
       // Check if login was successful and we have a token
       if (response && response.token) {
         // Store token in localStorage
-        localStorage.setItem('token', response.token);
+        localStorage.setItem('authToken', response.token);
         
         // Store user data
         const userData = {
@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }) => {
       // Check if registration was successful and we have a token
       if (response && response.token) {
         // Store token in localStorage
-        localStorage.setItem('token', response.token);
+        localStorage.setItem('authToken', response.token);
         
         // Store user data
         const userData = {
@@ -129,7 +129,7 @@ export const AuthProvider = ({ children }) => {
 
   // Logout function
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
     localStorage.removeItem('admin');
     setUser(null);
     router.push('/login');

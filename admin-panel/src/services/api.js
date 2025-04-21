@@ -2,10 +2,11 @@ import axios from 'axios';
 
 // Create axios instance with base URL
 const API = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api',
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
 
 // Handle API errors consistently
@@ -14,12 +15,16 @@ const handleAPIError = (error) => {
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
+    console.error('Response data:', error.response.data);
+    console.error('Response status:', error.response.status);
     return error.response.data;
     } else if (error.request) {
       // The request was made but no response was received
+    console.error('No response received:', error.request);
     return { message: 'No response from server. Please check your internet connection.' };
     } else {
       // Something happened in setting up the request
+    console.error('Request error:', error.message);
     return { message: error.message || 'An unexpected error occurred.' };
   }
 };
@@ -31,7 +36,32 @@ API.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
+}, (error) => {
+  console.error('Request interceptor error:', error);
+  return Promise.reject(error);
 });
+
+// Add response interceptor for global error handling
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('Response interceptor caught error:', error);
+    
+    // Handle session expiration (401 errors)
+    if (error.response && error.response.status === 401) {
+      console.log('Unauthorized access - logging out');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      
+      // Only redirect if we're in the browser
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
 
 // Auth API
 export const authAPI = {
@@ -45,7 +75,7 @@ export const authAPI = {
   },
   register: async (userData) => {
     try {
-      const response = await API.post('/auth/register', userData);
+      const response = await API.post('/admin/register', userData);
     return response.data;
     } catch (error) {
       throw handleAPIError(error);
@@ -67,67 +97,58 @@ export const authAPI = {
 
 // Categories API
 export const categoriesAPI = {
-  // Keeping both function names for compatibility
+  // Get all categories
   getCategories: async (params = {}) => {
     try {
-      // Try multiple possible API endpoints for categories
-      let response;
-      try {
-        // First try standard /categories endpoint
-        response = await API.get('/categories', { params });
-      } catch (error) {
-        console.log("First categories endpoint failed, trying alternative...");
-        try {
-          // Then try /category/all which is common in some APIs
-          response = await API.get('/category/all', { params });
-        } catch (secondError) {
-          console.log("Second categories endpoint failed, trying another alternative...");
-          // Last try with /category endpoint
-          response = await API.get('/category', { params });
-        }
-      }
+      console.log('Fetching categories with params:', params);
       
-      console.log("Categories API response:", response);
+      // First try the correct endpoint from our backend
+      let response = await API.get('/category/show', { params });
+      console.log('Categories API raw response:', response);
       
-      // Parse and standardize category data format
+      // Parse response data based on our API structure
       let categoryData = [];
       
       if (response && response.data) {
-        // Handle different response structures
-        if (Array.isArray(response.data)) {
+        console.log('Categories response data structure:', response.data);
+        
+        // Handle the exact structure from our backend
+        if (response.data.result && Array.isArray(response.data.result)) {
+          categoryData = response.data.result;
+          console.log('Found categories in result array:', categoryData.length);
+        } else if (response.data.success && response.data.result && Array.isArray(response.data.result)) {
+          // Sometimes it's nested under success
+          categoryData = response.data.result;
+          console.log('Found categories in success.result array:', categoryData.length);
+        } else if (Array.isArray(response.data)) {
           categoryData = response.data;
-        } else if (response.data.categories && Array.isArray(response.data.categories)) {
-          categoryData = response.data.categories;
-        } else if (response.data.data && Array.isArray(response.data.data)) {
-          categoryData = response.data.data;
-        } else {
-          // Try to extract categories from any array property
-          for (const key in response.data) {
-            if (Array.isArray(response.data[key])) {
-              categoryData = response.data[key];
-              break;
-            }
-          }
+          console.log('Response data is directly an array:', categoryData.length);
         }
       }
       
-      // If no categories were found, use fallback
-      if (!categoryData || categoryData.length === 0) {
-        console.log("No categories found in API response, using fallback data");
-        return getFallbackCategories();
+      // If categories were found, process them to a standard format
+      if (categoryData.length > 0) {
+        console.log('Sample category data before processing:', categoryData[0]);
+        
+        const processedCategories = categoryData.map(cat => ({
+          _id: cat._id || `cat-${Math.random().toString(36).substr(2, 9)}`,
+          name: cat.parent || cat.name || 'Unnamed Category',
+          parent: cat.parent || '',
+          children: cat.children || [],
+          description: cat.description || '',
+          status: cat.status || 'Show',
+          productType: cat.productType || 'fashion',
+          img: cat.img || null,
+          products: cat.products || []
+        }));
+        
+        console.log('Processed categories successfully:', processedCategories.length);
+        return processedCategories;
       }
       
-      // Ensure each category has required properties
-      const processedCategories = categoryData.map(cat => ({
-        _id: cat._id || cat.id || `cat-${Math.random().toString(36).substr(2, 9)}`,
-        name: cat.name || cat.title || cat.categoryName || 'Unnamed Category',
-        description: cat.description || '',
-        parentCategory: cat.parentCategory || cat.parentId || null,
-        isMain: cat.isMain || (!cat.parentCategory && !cat.parentId) || false,
-        productCount: cat.productCount || 0
-      }));
-      
-      return processedCategories;
+      // If no categories found, use fallback
+      console.log('No categories found in API response, using fallback data');
+      return getFallbackCategories();
     } catch (error) {
       console.error('Error fetching categories:', error);
       // Return mock data as fallback for categories
@@ -146,19 +167,7 @@ export const categoriesAPI = {
 
   getCategoryById: async (id) => {
     try {
-      // Try multiple possible endpoints
-      let response;
-      try {
-        response = await API.get(`/categories/${id}`);
-      } catch (error) {
-        console.log("First category detail endpoint failed, trying alternative...");
-        try {
-          response = await API.get(`/category/${id}`);
-        } catch (secondError) {
-          console.log("Second category detail endpoint failed, trying another...");
-          response = await API.get(`/category/single/${id}`);
-        }
-      }
+      const response = await API.get(`/category/get/${id}`);
       return response.data;
     } catch (error) {
       console.error(`Error fetching category ${id}:`, error);
@@ -168,14 +177,14 @@ export const categoriesAPI = {
 
   createCategory: async (categoryData) => {
     try {
-      // Try both possible endpoints
-      let response;
-      try {
-        response = await API.post('/categories', categoryData);
-      } catch (error) {
-        console.log("First category create endpoint failed, trying alternative...");
-        response = await API.post('/category/add', categoryData);
-      }
+      // Ensure headers are set for JSON data
+      const response = await API.post('/category/add', categoryData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Category creation response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error creating category:', error);
@@ -185,14 +194,7 @@ export const categoriesAPI = {
 
   updateCategory: async (id, categoryData) => {
     try {
-      // Try both possible endpoints
-      let response;
-      try {
-        response = await API.put(`/categories/${id}`, categoryData);
-      } catch (error) {
-        console.log("First category update endpoint failed, trying alternative...");
-        response = await API.patch(`/category/edit/${id}`, categoryData);
-      }
+      const response = await API.patch(`/category/edit/${id}`, categoryData);
       return response.data;
     } catch (error) {
       console.error(`Error updating category ${id}:`, error);
@@ -202,14 +204,9 @@ export const categoriesAPI = {
 
   deleteCategory: async (id) => {
     try {
-      // Try both possible endpoints
-      let response;
-      try {
-        response = await API.delete(`/categories/${id}`);
-      } catch (error) {
-        console.log("First category delete endpoint failed, trying alternative...");
-        response = await API.delete(`/category/${id}`);
-      }
+      // Use the correct endpoint from backend
+      const response = await API.delete(`/category/delete/${id}`);
+      console.log('Category deletion response:', response.data);
       return response.data;
     } catch (error) {
       console.error(`Error deleting category ${id}:`, error);
@@ -232,28 +229,48 @@ export const categoriesAPI = {
   }
 };
 
-// Helper function to get fallback categories with hierarchy
+// Fallback categories if API fails
 const getFallbackCategories = () => {
   return [
-    // Main categories
-    { _id: 'men', name: 'Men', description: 'Men\'s clothing and accessories', isMain: true, productCount: 15 },
-    { _id: 'women', name: 'Women', description: 'Women\'s clothing and accessories', isMain: true, productCount: 23 },
-    { _id: 'bags', name: 'Bags', description: 'Bags and luggage', isMain: true, productCount: 8 },
-    
-    // Subcategories for Men
-    { _id: 'men-tshirts', name: 'T-Shirts', description: 'Men\'s T-shirts', parentCategory: 'men', productCount: 5 },
-    { _id: 'men-shirts', name: 'Shirts', description: 'Men\'s formal and casual shirts', parentCategory: 'men', productCount: 7 },
-    { _id: 'men-jeans', name: 'Jeans', description: 'Men\'s jeans and pants', parentCategory: 'men', productCount: 3 },
-    
-    // Subcategories for Women
-    { _id: 'women-dresses', name: 'Dresses', description: 'Women\'s dresses', parentCategory: 'women', productCount: 8 },
-    { _id: 'women-tops', name: 'Tops', description: 'Women\'s tops and blouses', parentCategory: 'women', productCount: 10 },
-    { _id: 'women-jeans', name: 'Jeans', description: 'Women\'s jeans and pants', parentCategory: 'women', productCount: 5 },
-    
-    // Subcategories for Bags
-    { _id: 'bags-handbags', name: 'Handbags', description: 'Women\'s handbags', parentCategory: 'bags', productCount: 4 },
-    { _id: 'bags-backpacks', name: 'Backpacks', description: 'Backpacks for all', parentCategory: 'bags', productCount: 3 },
-    { _id: 'bags-travel', name: 'Travel Bags', description: 'Luggage and travel bags', parentCategory: 'bags', productCount: 1 }
+    {
+      _id: '64200cef21162f8b15beae40',
+      name: 'Bags',
+      parent: 'Bags',
+      children: ['HandBag', 'Ladies purchase', 'Traveling Bag'],
+      productType: 'fashion',
+      status: 'Show',
+      products: []
+    },
+    {
+      _id: '65f0a1b123456789abcdef01',
+      name: 'Men',
+      parent: 'Men',
+      children: [
+        'T-Shirts & Polos',
+        'Shirts',
+        'Jeans & Trousers',
+        'Kurtas & Ethnic Wear',
+        'Jackets & Hoodies'
+      ],
+      productType: 'fashion',
+      status: 'Show',
+      products: []
+    },
+    {
+      _id: '65f0a1b223456789abcdef02',
+      name: 'Women',
+      parent: 'Women',
+      children: [
+        'Sarees & Ethnic Wear',
+        'Kurtis & Tunics',
+        'Tops & T-Shirts',
+        'Dresses & Jumpsuits',
+        'Leggings & Palazzos'
+      ],
+      productType: 'fashion',
+      status: 'Show',
+      products: []
+    }
   ];
 };
 
@@ -317,22 +334,30 @@ export const productsAPI = {
   
   getProductById: async (id) => {
     try {
-      // Try multiple possible endpoints
-      let response;
-      try {
-        response = await API.get(`/products/${id}`);
-      } catch (error) {
-        console.log("First product detail endpoint failed, trying alternative...");
-        try {
-          response = await API.get(`/product/${id}`);
-        } catch (secondError) {
-          console.log("Second product detail endpoint failed, trying another...");
-          response = await API.get(`/product/single-product/${id}`);
-        }
+      console.log(`Fetching product with ID: ${id}`);
+      
+      // Use the correct endpoint matching our backend
+      const response = await API.get(`/product/single-product/${id}`);
+      console.log('Product data response:', response.data);
+      
+      // Process response based on our API structure
+      if (response.data) {
+        return response.data;
       }
-    return response.data;
+      
+      throw new Error('Product data not found in response');
     } catch (error) {
       console.error(`Error fetching product ${id}:`, error);
+      throw handleAPIError(error);
+    }
+  },
+  
+  // Alias for getProductById to ensure compatibility with the edit page
+  getProduct: async (id) => {
+    try {
+      return await productsAPI.getProductById(id);
+    } catch (error) {
+      console.error(`Error in getProduct(${id}):`, error);
       throw handleAPIError(error);
     }
   },
@@ -356,14 +381,17 @@ export const productsAPI = {
   
   updateProduct: async (id, product) => {
     try {
-      // Try both possible endpoints
-      let response;
-      try {
-        response = await API.put(`/products/${id}`, product);
-      } catch (error) {
-        console.log("First product update endpoint failed, trying alternative...");
-        response = await API.patch(`/product/edit-product/${id}`, product);
-      }
+      console.log(`Updating product with ID: ${id}`);
+      console.log('Product data being sent:', product);
+      
+      // Use the correct endpoint matching our backend
+      const response = await API.patch(`/product/edit-product/${id}`, product, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Update response:', response.data);
     return response.data;
     } catch (error) {
       console.error(`Error updating product ${id}:`, error);
@@ -384,6 +412,54 @@ export const productsAPI = {
     return response.data;
     } catch (error) {
       console.error(`Error deleting product ${id}:`, error);
+      throw handleAPIError(error);
+    }
+  },
+  
+  getBrands: async () => {
+    try {
+      // Try multiple possible API endpoints to fetch brands
+      let response;
+      try {
+        response = await API.get('/brand');
+      } catch (error) {
+        console.log("First brand endpoint failed, trying alternative...");
+        try {
+          response = await API.get('/brands');
+        } catch (secondError) {
+          console.log("Second brand endpoint failed, trying another alternative...");
+          response = await API.get('/brand/all');
+        }
+      }
+      
+      if (response.data?.result) {
+        return response.data.result;
+      } else if (response.data?.brands) {
+        return response.data.brands;
+      } else if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching brands:', error);
+      // Return mock data as fallback
+      return [
+        { _id: '1', name: 'Nike' },
+        { _id: '2', name: 'Adidas' },
+        { _id: '3', name: 'Puma' },
+        { _id: '4', name: 'Levis' },
+        { _id: '5', name: 'Vastrashahi' }
+      ];
+    }
+  },
+
+  getCategories: async () => {
+    // Reuse the categoriesAPI.getCategories function
+    try {
+      return await categoriesAPI.getCategories();
+    } catch (error) {
+      console.error('Error in productsAPI.getCategories:', error);
       throw handleAPIError(error);
     }
   },

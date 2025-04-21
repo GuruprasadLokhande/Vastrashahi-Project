@@ -3,7 +3,6 @@ import SEO from "@/components/seo";
 import Wrapper from "@/layout/wrapper";
 import HeaderTwo from "@/layout/headers/header-2";
 import ShopBreadcrumb from "@/components/breadcrumb/shop-breadcrumb";
-import ShopArea from "@/components/shop/shop-area";
 import { useGetAllProductsQuery } from "@/redux/features/productApi";
 import ErrorMsg from "@/components/common/error-msg";
 import Footer from "@/layout/footers/footer";
@@ -16,6 +15,7 @@ const ShopRightSidebarPage = ({ query }) => {
   const [priceValue, setPriceValue] = useState([0, 0]);
   const [selectValue, setSelectValue] = useState("");
   const [currPage, setCurrPage] = useState(1);
+  
   // Load the maximum price once the products have been loaded
   useEffect(() => {
     if (!isLoading && !isError && products?.data?.length > 0) {
@@ -28,14 +28,14 @@ const ShopRightSidebarPage = ({ query }) => {
 
   // handleChanges
   const handleChanges = (val) => {
-    setCurrPage(1)
+    setCurrPage(1);
     setPriceValue(val);
   };
 
   // selectHandleFilter
   const selectHandleFilter = e => {
-    setSelectValue(e.value)
-  }
+    setSelectValue(e.value);
+  };
 
   // other props 
   const otherProps = {
@@ -46,7 +46,8 @@ const ShopRightSidebarPage = ({ query }) => {
     selectHandleFilter,
     currPage,
     setCurrPage,
-  }
+  };
+  
   // decide what to render
   let content = null;
 
@@ -65,7 +66,7 @@ const ShopRightSidebarPage = ({ query }) => {
     // select short filtering 
     if (selectValue) {
       if (selectValue === 'Default Sorting') {
-        product_items = products.data
+        product_items = products.data;
       }
       else if (selectValue === 'Low to High') {
         product_items = products.data.slice().sort((a, b) => Number(a.price) - Number(b.price));
@@ -80,7 +81,7 @@ const ShopRightSidebarPage = ({ query }) => {
         product_items = products.data.filter(p => p.discount > 0);
       }
       else {
-        product_items = products.data
+        product_items = products.data;
       }
     }
     // price filter
@@ -91,10 +92,10 @@ const ShopRightSidebarPage = ({ query }) => {
     // status filter
     if (query.status) {
       if (query.status === 'on-sale') {
-        product_items = product_items.filter(p => p.discount > 0)
+        product_items = product_items.filter(p => p.discount > 0);
       }
       else if (query.status === 'in-stock') {
-        product_items = product_items.filter(p => p.status === 'in-stock')
+        product_items = product_items.filter(p => p.status === 'in-stock');
       }
     }
 
@@ -103,24 +104,26 @@ const ShopRightSidebarPage = ({ query }) => {
       product_items = product_items.filter(
         (p) => p.parent.toLowerCase().replace("&", "").split(" ").join("-") === query.category
       );
+      
+      // subcategory filter
+      if (query.subcategory) {
+        product_items = product_items.filter(
+          (p) => p.children.toLowerCase().replace("&", "").split(" ").join("-") === query.subcategory
+        );
+      }
     }
 
     // color filter
     if (query.color) {
       product_items = product_items.filter(product => {
-        for (let i = 0; i < product.imageURLs.length; i++) {
-          const color = product.imageURLs[i]?.color;
-          if (color && color?.name.toLowerCase().replace("&", "").split(" ").join("-") === query.color) {
-            return true; // match found, include product in result
-          }
+        if (product.imageURLs && product.imageURLs.length > 0) {
+          return product.imageURLs.some(item => 
+            item.color && 
+            item.color.name.toLowerCase().replace(" ", "-") === query.color
+          );
         }
         return false; // no match found, exclude product from result
-      })
-    }
-
-    // brand filter
-    if (query.brand) {
-      product_items = product_items.filter(p => p.brand.name.toLowerCase().replace("&", "").split(" ").join("-") === query.brand)
+      });
     }
 
     content = (

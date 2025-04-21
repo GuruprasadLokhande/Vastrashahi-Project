@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import StatsCard from '../../components/dashboard/StatsCard';
 import RecentOrders from '../../components/dashboard/RecentOrders';
-import { FiShoppingBag, FiUsers, FiDollarSign, FiShoppingCart } from 'react-icons/fi';
+import { FiShoppingBag, FiUsers, FiDollarSign, FiShoppingCart, FiGrid } from 'react-icons/fi';
 import ProtectedRoute from '../../components/ProtectedRoute';
+import { categoriesAPI } from '../../services/api';
 
 // Mock data for dashboard
 const mockStats = [
@@ -87,18 +88,44 @@ function Dashboard() {
   const [stats, setStats] = useState(mockStats);
   const [orders, setOrders] = useState(mockOrders);
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [categoryLoading, setCategoryLoading] = useState(false);
+  const [categoryError, setCategoryError] = useState(null);
 
   useEffect(() => {
-    // Here you would fetch real data
+    // Fetch overview data
     setLoading(true);
     
-    // Simulate API call
+    // Simulate API call for main stats
     setTimeout(() => {
       setStats(mockStats);
       setOrders(mockOrders);
       setLoading(false);
     }, 500);
+
+    // Actually fetch categories to check loading
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setCategoryLoading(true);
+      setCategoryError(null);
+      
+      // Log the API URL being used
+      console.log('Fetching categories from:', process.env.NEXT_PUBLIC_API_BASE_URL);
+      
+      const categoriesData = await categoriesAPI.getCategories();
+      console.log('Categories loaded:', categoriesData);
+      
+      setCategories(categoriesData || []);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      setCategoryError('Failed to load categories: ' + (error.message || 'Unknown error'));
+    } finally {
+      setCategoryLoading(false);
+    }
+  };
 
   return (
     <div className="p-4 sm:p-6 md:p-8">
@@ -127,10 +154,94 @@ function Dashboard() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
             <div className="lg:col-span-3">
               <RecentOrders orders={orders} />
             </div>
+          </div>
+
+          {/* Category Status Section */}
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                <FiGrid className="mr-2" />
+                Category Status
+              </h2>
+              <button 
+                onClick={fetchCategories} 
+                className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+              >
+                Refresh
+              </button>
+            </div>
+
+            {categoryLoading ? (
+              <div className="flex justify-center items-center h-24">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : categoryError ? (
+              <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded">
+                {categoryError}
+              </div>
+            ) : (
+              <>
+                <p className="text-gray-600 mb-4">
+                  {categories.length > 0 
+                    ? `Loaded ${categories.length} categories successfully`
+                    : 'No categories found. You can create categories from the Categories menu.'}
+                </p>
+                
+                {categories.length > 0 && (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead>
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Subcategories
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {categories.slice(0, 5).map((category) => (
+                          <tr key={category._id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {category.name || category.parent}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {category.children && Array.isArray(category.children) 
+                                ? category.children.length 
+                                : 0}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                category.status === 'Show' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
+                                {category.status || 'Active'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {categories.length > 5 && (
+                      <div className="mt-4 text-right">
+                        <a href="/categories" className="text-blue-500 text-sm">
+                          View all categories
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </>
       )}

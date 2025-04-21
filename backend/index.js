@@ -5,7 +5,7 @@ const path = require('path');
 const cors = require("cors");
 const connectDB = require("./config/db");
 const { secret } = require("./config/secret");
-const PORT = secret.port || 7000;
+const PORT = secret.port || 8000;
 const morgan = require('morgan')
 // error handler
 const globalErrorHandler = require("./middleware/global-error-handler");
@@ -24,7 +24,7 @@ const cloudinaryRoutes = require("./routes/cloudinary.routes");
 
 // middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5000'],
+  origin: ['http://localhost:3000', 'http://localhost:5000', secret.client_url, secret.admin_url],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],

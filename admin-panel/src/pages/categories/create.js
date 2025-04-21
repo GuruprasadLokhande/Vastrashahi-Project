@@ -129,25 +129,77 @@ const CreateCategoryPage = () => {
     setIsSubmitting(true);
     
     try {
-      const formPayload = new FormData();
-      formPayload.append('name', formData.name);
+      // Create a proper category object matching the backend schema
+      let categoryData = {
+        parent: formData.name, // The backend uses 'parent' for category name
+        productType: 'fashion',
+        status: 'Show',
+        description: formData.description || ''
+      };
       
-      if (formData.description) {
-        formPayload.append('description', formData.description);
+      // Add children array if this is a parent category
+      if (!formData.isSubcategory) {
+        categoryData.children = []; // Empty children array for new parent categories
+      } 
+      // If this is a subcategory, we need to handle it differently
+      else if (formData.isSubcategory && formData.parentCategory) {
+        // In this case, we need to update the parent category instead
+        // by adding this subcategory to its children array
+        
+        // First get the parent category 
+        const parentCategoryData = await categoriesAPI.getCategoryById(formData.parentCategory);
+        
+        if (parentCategoryData) {
+          // Extract the current parent and children
+          const parentName = parentCategoryData.parent || parentCategoryData.name;
+          let children = parentCategoryData.children || [];
+          
+          // Add the new subcategory if it doesn't already exist
+          if (!children.includes(formData.name)) {
+            children.push(formData.name);
+            
+            // Update the parent category with the new subcategory
+            await categoriesAPI.updateCategory(formData.parentCategory, {
+              children: children
+            });
+            
+            toast.success(`Added ${formData.name} as subcategory to ${parentName}`);
+            router.push('/categories');
+            return;
+          } else {
+            toast.error(`Subcategory ${formData.name} already exists under ${parentName}`);
+            setIsSubmitting(false);
+            return;
+          }
+        }
       }
       
+      // Handle image if present
       if (formData.image) {
-        formPayload.append('image', formData.image);
+        const imageFormData = new FormData();
+        imageFormData.append('image', formData.image);
+        
+        try {
+          // Upload image to cloudinary
+          const uploadResponse = await fetch('/api/cloudinary/add-img', {
+            method: 'POST',
+            body: imageFormData
+          });
+          
+          const uploadResult = await uploadResponse.json();
+          
+          if (uploadResult.success && uploadResult.data.url) {
+            categoryData.img = uploadResult.data.url;
+          }
+        } catch (imageError) {
+          console.error('Error uploading image:', imageError);
+        }
       }
       
-      // Add parent category if this is a subcategory
-      if (formData.isSubcategory && formData.parentCategory) {
-        formPayload.append('parentCategory', formData.parentCategory);
-        // Also indicate that this is a subcategory
-        formPayload.append('isSubcategory', 'true');
-      }
+      console.log('Sending category data:', categoryData);
       
-      await categoriesAPI.createCategory(formPayload);
+      // Create the category
+      const response = await categoriesAPI.createCategory(categoryData);
       
       toast.success('Category created successfully');
       router.push('/categories');

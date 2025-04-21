@@ -76,12 +76,12 @@ const productsSchema = mongoose.Schema({
   brand: {
     name: {
       type: String,
-      required: true,
+      required: false,
     },
     id: {
       type: ObjectId,
       ref: "Brand",
-      required: true,
+      required: false,
     }
   },
   category: {
