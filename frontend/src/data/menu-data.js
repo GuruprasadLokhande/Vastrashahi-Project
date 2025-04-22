@@ -2,6 +2,8 @@ import home_1 from '@assets/img/menu/menu-home-1.jpg';
 import home_2 from '@assets/img/menu/menu-home-2.jpg';
 import home_3 from '@assets/img/menu/menu-home-3.jpg';
 import home_4 from '@assets/img/menu/menu-home-4.jpg';
+import mens_fashion from '@assets/img/menu/mens-fashion.jpg';
+import womens_fashion from '@assets/img/menu/women2.jpg';
 
 const menu_data = [
   {
@@ -25,7 +27,8 @@ const menu_data = [
           { title: 'Jeans & Trousers', link: '/shop?category=jeans-trousers&gender=men' },
           { title: 'Kurtas & Ethnic Wear', link: '/shop?category=ethnic-wear&gender=men' },
           { title: 'Jackets & Hoodies', link: '/shop?category=jackets-hoodies&gender=men' }
-        ]
+        ],
+        image: mens_fashion
       }
     ]
   },
@@ -44,7 +47,8 @@ const menu_data = [
           { title: 'Tops & T-Shirts', link: '/shop?category=tops-tshirts&gender=women' },
           { title: 'Dresses & Jumpsuits', link: '/shop?category=dresses-jumpsuits&gender=women' },
           { title: 'Leggings & Palazzos', link: '/shop?category=leggings-palazzos&gender=women' }
-        ]
+        ],
+        image: womens_fashion
       }
     ]
   },

@@ -14,7 +14,7 @@ if (typeof window !== "undefined") {
 }
 
 // stripePromise
-const NEXT_PUBLIC_STRIPE_KEY = 'pk_test_51NYXCFGndYsQkAEFifIbJH64sZFMDpF7DcLYvUUN2az3VdK1M7qVPo7Z2j9rhunf3Pd0C3aFLENIxFriJWwx1P6a00lQFqaoc6';
+const NEXT_PUBLIC_STRIPE_KEY = 'pk_test_51RGWxsRK9jjlQkjc4CjcTYAunSVwhZDEbIANlTYuwaZEAd1AodWVF3B4hWstBxTmjpL5HuU7KXJCQAGdb7vUbjge00trf3HjSu';
 const stripePromise = loadStripe(NEXT_PUBLIC_STRIPE_KEY, {
   apiVersion: '2023-10-16',
   stripeAccount: undefined,

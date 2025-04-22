@@ -60,16 +60,29 @@ const Menus = () => {
             <ul className="tp-submenu tp-mega-menu mega-menu-style-2">
               {menu.product_pages.map((p, i) => (
                 <li key={i} className="has-dropdown">
-                  <Link href={p.link} className="mega-menu-title">
-                    {p.title}
-                  </Link>
-                  <ul className="tp-submenu">
-                    {p.mega_menus.map((m, i) => (
-                      <li key={i}>
-                        <Link href={m.link}>{m.title}</Link>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="mega-menu-content">
+                    <Link href={p.link} className="mega-menu-title">
+                      {p.title}
+                    </Link>
+                    <ul className="tp-submenu">
+                      {p.mega_menus.map((m, i) => (
+                        <li key={i}>
+                          <Link href={m.link}>{m.title}</Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  {p.image && (
+                    <div className="tp-mega-menu-img">
+                      <Image 
+                        src={p.image} 
+                        alt={p.title}
+                        width={300}
+                        height={400}
+                        style={{objectFit: 'cover'}}
+                      />
+                    </div>
+                  )}
                 </li>
               ))}
               <li className="mega-menu-product">
