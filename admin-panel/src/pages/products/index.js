@@ -15,6 +15,7 @@ function Products() {
   const [expandedCategories, setExpandedCategories] = useState({});
   const [productsByCategory, setProductsByCategory] = useState({});
   const [error, setError] = useState(null);
+  const [showFeaturedOnly, setShowFeaturedOnly] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -310,14 +311,24 @@ function Products() {
     }));
   };
 
-  // Filter products based on search term
+  // Filter products based on search term and featured filter
   const getFilteredProducts = (products) => {
     if (!products || !Array.isArray(products)) return [];
     
     return products.filter(product => {
       if (!product) return false;
       const title = product.title || '';
-      return title.toLowerCase().includes(searchTerm.toLowerCase());
+      const isFeatured = product.featured === true;
+      
+      // Apply search filter
+      const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Apply featured filter if enabled
+      if (showFeaturedOnly) {
+        return matchesSearch && isFeatured;
+      }
+      
+      return matchesSearch;
     });
   };
 
@@ -514,6 +525,20 @@ function Products() {
               </div>
             </div>
           </div>
+          <div className="w-full md:w-auto">
+            <div className="text-sm mb-1 font-medium block">Featured Only</div>
+            <div className="flex items-center">
+              <label className="inline-flex relative items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  className="sr-only peer"
+                  checked={showFeaturedOnly}
+                  onChange={() => setShowFeaturedOnly(!showFeaturedOnly)}
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -562,6 +587,7 @@ function Products() {
                 <th className="px-4 py-3">Price</th>
                 <th className="px-4 py-3">Stock</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Featured</th>
                 <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
@@ -594,6 +620,17 @@ function Products() {
                       >
                                   {product.status || 'Out of Stock'}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {product.featured ? (
+                        <span className="px-2 py-1 text-xs font-medium text-white bg-yellow-500 rounded-full">
+                          Featured
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 text-xs font-medium text-gray-500 bg-gray-200 rounded-full">
+                          Standard
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex space-x-2">

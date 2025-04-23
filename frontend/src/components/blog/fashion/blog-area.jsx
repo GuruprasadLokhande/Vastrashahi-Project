@@ -6,7 +6,12 @@ import { TextShapeLine } from '@/svg';
 import BlogItem from './blog-item';
 
 const BlogArea = () => {
-  const blogs = blogData.filter(b => b.blog === 'fashion')
+  // Get Vastrashahi blogs, sort by date (newest first), and take only the first 3
+  const blogs = blogData
+    .filter(b => b.category === 'Vastrashahi')
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .slice(0, 3);
+    
   return (
     <>
       <section className="tp-blog-area pt-110 pb-120">
@@ -15,10 +20,10 @@ const BlogArea = () => {
             <div className="col-xl-12">
               <div className="tp-section-title-wrapper-2 mb-50 text-center">
                 <span className="tp-section-title-pre-2">
-                  Our Blog & News
+                  Vastrashahi Blogs and Gallery
                   <TextShapeLine />
                 </span>
-                <h3 className="tp-section-title-2">Latest News & Articles</h3>
+                <h3 className="tp-section-title-2">Latest Articles on Traditional Clothing</h3>
               </div>
             </div>
           </div>
@@ -32,7 +37,7 @@ const BlogArea = () => {
           <div className="row">
             <div className="col-xl-12">
               <div className="tp-blog-more-2 mt-10 text-center">
-                <Link href="/blog" className="tp-btn tp-btn-border tp-btn-border-sm">Discover More</Link>
+                <Link href="/blog" className="tp-btn tp-btn-border tp-btn-border-sm">Explore More Traditional Stories</Link>
               </div>
             </div>
           </div>

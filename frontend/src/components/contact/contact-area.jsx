@@ -15,61 +15,67 @@ const ContactArea = () => {
           <div className="tp-contact-inner">
             <div className="row">
               <div className="col-xl-12">
-                <div className="tp-contact-info-wrapper d-flex justify-content-between align-items-center">
-                  <div className="tp-contact-info-item">
-                    <div className="tp-contact-info-icon">
-                      <span>
-                        <Image src={contact_icon_1} alt="contact-icon" />
-                      </span>
-                    </div>
-                    <div className="tp-contact-info-content">
-                      <p data-info="mail">
-                        <a href="mailto:info@vastrashahi.com">info@vastrashahi.com</a>
-                      </p>
-                      <p data-info="phone">
-                        <a href="tel:+91-9876543210">+91 9876543210</a>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="tp-contact-info-item">
-                    <div className="tp-contact-info-icon">
-                      <span>
-                        <Image src={contact_icon_2} alt="contact-icon" />
-                      </span>
-                    </div>
-                    <div className="tp-contact-info-content">
-                      <p>
-                        <a
-                          href="https://maps.app.goo.gl/qZfTZdfY3QP55qLs8"
-                          target="_blank"
-                        >
-                          Rashiwade Bk || Tale - Radhanagari <br /> Dist - Kolhapur, Maharashtra, India, 416211
-                        </a>
-                      </p>
+                <div className="row g-4">
+                  <div className="col-lg-4 col-md-6 col-sm-12">
+                    <div className="tp-contact-info-item">
+                      <div className="tp-contact-info-icon">
+                        <span>
+                          <Image src={contact_icon_1} alt="contact-icon" />
+                        </span>
+                      </div>
+                      <div className="tp-contact-info-content">
+                        <p data-info="mail">
+                          <a href="mailto:info@vastrashahi.com">info@vastrashahi.com</a>
+                        </p>
+                        <p data-info="phone">
+                          <a href="tel:+91-9876543210">+91 9876543210</a>
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <div className="tp-contact-info-item">
-                    <div className="tp-contact-info-icon">
-                      <span>
-                        <Image src={contact_icon_3} alt="contact-icon" />
-                      </span>
+                  <div className="col-lg-4 col-md-6 col-sm-12">
+                    <div className="tp-contact-info-item">
+                      <div className="tp-contact-info-icon">
+                        <span>
+                          <Image src={contact_icon_2} alt="contact-icon" />
+                        </span>
+                      </div>
+                      <div className="tp-contact-info-content">
+                        <p>
+                          <a
+                            href="https://maps.app.goo.gl/qZfTZdfY3QP55qLs8"
+                            target="_blank"
+                          >
+                            Rashiwade Bk || Tale - Radhanagari <br /> Dist - Kolhapur, Maharashtra, India, 416211
+                          </a>
+                        </p>
+                      </div>
                     </div>
-                    <div className="tp-contact-info-content">
-                      <div className="tp-contact-social-wrapper">
-                        <h4 className="tp-contact-social-title">
-                          Find on social media
-                        </h4>
+                  </div>
+                  <div className="col-lg-4 col-md-6 col-sm-12">
+                    <div className="tp-contact-info-item">
+                      <div className="tp-contact-info-icon">
+                        <span>
+                          <Image src={contact_icon_3} alt="contact-icon" />
+                        </span>
+                      </div>
+                      <div className="tp-contact-info-content">
+                        <div className="tp-contact-social-wrapper">
+                          <h4 className="tp-contact-social-title">
+                            Find on social media
+                          </h4>
 
-                        <div className="tp-contact-social-icon">
-                          <a href="https://facebook.com/vastrashahi" target="_blank">
-                            <i className="fa-brands fa-facebook-f"></i>
-                          </a>
-                          <a href="https://instagram.com/vastrashahi" target="_blank">
-                            <i className="fa-brands fa-instagram"></i>
-                          </a>
-                          <a href="https://youtube.com/vastrashahi" target="_blank">
-                            <i className="fa-brands fa-youtube"></i>
-                          </a>
+                          <div className="tp-contact-social-icon">
+                            <a href="https://facebook.com/vastrashahi" target="_blank">
+                              <i className="fa-brands fa-facebook-f"></i>
+                            </a>
+                            <a href="https://instagram.com/vastrashahi" target="_blank">
+                              <i className="fa-brands fa-instagram"></i>
+                            </a>
+                            <a href="https://youtube.com/vastrashahi" target="_blank">
+                              <i className="fa-brands fa-youtube"></i>
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -97,31 +103,31 @@ const ContactArea = () => {
               </div>
             </div>
           </div>
-          <div className="row">
+          <div className="row g-4">
             {/* Potdar Brother Jewellers */}
-            <div className="col-xl-6 col-lg-6">
-              <div className="tp-partner-item p-relative mb-50">
-                <div className="tp-partner-content text-center">
-                  <h3 className="tp-partner-title" style={{ fontSize: '2.5rem', color: '#FFB396' }}>
+            <div className="col-xl-6 col-lg-6 col-md-12">
+              <div className="tp-partner-item p-relative mb-30 mb-lg-0">
+                <div className="tp-partner-content text-center p-3">
+                  <h3 className="tp-partner-title" style={{ fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', color: '#FFB396' }}>
                     Potdar Brother Jewellers
                   </h3>
-                  <div className="tp-partner-contact mt-30">
-                    <p><i className="fa-solid fa-phone"></i> +91 1234567890</p>
-                    <p><i className="fa-solid fa-location-dot"></i> Rashiwade Bk || Tale - Radhanagari, Kolhapur, Maharashtra, 416211</p>
+                  <div className="tp-partner-contact mt-20">
+                    <p className="mb-2"><i className="fa-solid fa-phone me-2"></i> +91 1234567890</p>
+                    <p><i className="fa-solid fa-location-dot me-2"></i> Rashiwade Bk || Tale - Radhanagari, Kolhapur, Maharashtra, 416211</p>
                   </div>
                 </div>
               </div>
             </div>
             {/* New Maintrin Ladies Shop */}
-            <div className="col-xl-6 col-lg-6">
-              <div className="tp-partner-item p-relative mb-50">
-                <div className="tp-partner-content text-center">
-                  <h3 className="tp-partner-title" style={{ fontSize: '2.5rem', color: '#FFB396' }}>
+            <div className="col-xl-6 col-lg-6 col-md-12">
+              <div className="tp-partner-item p-relative mb-0">
+                <div className="tp-partner-content text-center p-3">
+                  <h3 className="tp-partner-title" style={{ fontSize: 'clamp(1.8rem, 4vw, 2.5rem)', color: '#FFB396' }}>
                     New Maintrin Ladies Shop
                   </h3>
-                  <div className="tp-partner-contact mt-30">
-                    <p><i className="fa-solid fa-phone"></i> +91 9876543210</p>
-                    <p><i className="fa-solid fa-location-dot"></i> Rashiwade Bk || Tale - Radhanagari, Kolhapur, Maharashtra, 416211</p>
+                  <div className="tp-partner-contact mt-20">
+                    <p className="mb-2"><i className="fa-solid fa-phone me-2"></i> +91 9876543210</p>
+                    <p><i className="fa-solid fa-location-dot me-2"></i> Rashiwade Bk || Tale - Radhanagari, Kolhapur, Maharashtra, 416211</p>
                   </div>
                 </div>
               </div>

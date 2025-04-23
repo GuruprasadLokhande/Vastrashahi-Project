@@ -10,11 +10,17 @@ import ContactMap from "@/components/contact/contact-map";
 const ContactPage = () => {
   return (
     <Wrapper>
-      <SEO pageTitle="Contact" />
+      <SEO 
+        pageTitle="Contact Us" 
+        metaDesc="Get in touch with Vastrashahi for traditional clothing and accessories"
+        metaKeywords="traditional clothing, contact vastrashahi, indian traditional wear"
+      />
       <HeaderTwo style_2={true} />
       <ContactBreadcrumb />
-      <ContactArea/>
-      <ContactMap/>
+      <div className="contact-page-wrapper">
+        <ContactArea/>
+        <ContactMap/>
+      </div>
       <Footer primary_style={true} />
     </Wrapper>
   );

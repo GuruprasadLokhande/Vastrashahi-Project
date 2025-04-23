@@ -53,19 +53,32 @@ const MyOrders = ({ orderData }) => {
 
   // Get status badge class
   const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case "Delivered":
+    switch (status?.toLowerCase()) {
+      case "delivered":
         return "badge bg-success";
-      case "Cancelled":
+      case "cancelled":
         return "badge bg-danger";
-      case "Return Requested":
-      case "Returned":
+      case "return requested":
+      case "returned":
         return "badge bg-warning";
-      case "Processing":
+      case "processing":
         return "badge bg-info";
+      case "pending":
+        return "badge bg-secondary";
       default:
         return "badge bg-secondary";
     }
+  };
+
+  // Check if order can be cancelled
+  const canCancelOrder = (status) => {
+    const nonCancellableStatuses = ["delivered", "cancelled", "return requested", "returned"];
+    return !nonCancellableStatuses.includes(status?.toLowerCase());
+  };
+
+  // Check if order can be returned
+  const canReturnOrder = (status) => {
+    return status?.toLowerCase() === "delivered";
   };
 
   return (
@@ -100,31 +113,33 @@ const MyOrders = ({ orderData }) => {
                     </span>
                   </td>
                   <td>
-                    <div className="d-flex gap-2">
+                    <div className="d-flex gap-3">
                       <Link 
                         href={`/order/${item._id}`} 
-                        className="invoice-btn"
+                        className="text-link"
                       >
-                        <i className="fas fa-file-invoice me-1"></i> Invoice
+                        <i className="fas fa-file-invoice me-1"></i> View Details
                       </Link>
                       
-                      {item.status !== "Delivered" && item.status !== "Cancelled" && (
+                      {canCancelOrder(item.status) && (
                         <button
                           onClick={() => handleCancelOrder(item._id)}
-                          className="text-danger border-0 bg-transparent"
+                          className="text-link text-danger border-0 bg-transparent"
                           disabled={isCancelling}
                         >
-                          Cancel
+                          <i className="fas fa-times me-1"></i>
+                          {isCancelling ? "Cancelling..." : "Cancel Order"}
                         </button>
                       )}
 
-                      {item.status === "Delivered" && !item.isReturned && (
+                      {canReturnOrder(item.status) && (
                         <button
                           onClick={() => openReturnModal(item._id)}
-                          className="tp-btn-2 btn-sm btn-warning"
+                          className="text-link text-warning border-0 bg-transparent"
                           disabled={isReturning}
                         >
-                          <i className="fas fa-undo me-1"></i> Return
+                          <i className="fas fa-undo me-1"></i>
+                          Return Order
                         </button>
                       )}
                     </div>
@@ -175,7 +190,7 @@ const MyOrders = ({ orderData }) => {
                 onClick={handleReturnOrder}
                 disabled={isReturning}
               >
-                {isReturning ? "Submitting..." : "Submit Return"}
+                {isReturning ? "Submitting..." : "Submit Return Request"}
               </button>
             </div>
           </div>
@@ -243,20 +258,28 @@ const MyOrders = ({ orderData }) => {
           font-weight: 500;
           font-size: 12px;
         }
-        .invoice-btn {
-          background-color: #FFE3D8;
-          color: #000;
-          padding: 6px 12px;
-          border-radius: 4px;
+        .text-link {
           font-size: 14px;
           text-decoration: none;
+          padding: 0;
+          margin: 0;
+          cursor: pointer;
+          transition: all 0.3s ease;
           display: inline-flex;
           align-items: center;
-          transition: all 0.3s ease;
         }
-        .invoice-btn:hover {
-          background-color: #ffd1c1;
-          color: #000;
+        .text-link:hover {
+          opacity: 0.8;
+        }
+        .text-link:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .text-danger {
+          color: #dc3545;
+        }
+        .text-warning {
+          color: #ffc107;
         }
       `}</style>
     </>

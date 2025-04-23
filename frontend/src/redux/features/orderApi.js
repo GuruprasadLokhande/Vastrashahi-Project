@@ -4,35 +4,34 @@ export const orderApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     createOrder: builder.mutation({
       query: (data) => ({
-        url: "/order/create",
+        url: "/api/order/create",
         method: "POST",
         body: data,
       }),
       invalidatesTags: ["Orders"],
     }),
     getOrder: builder.query({
-      query: (id) => `/order/${id}`,
+      query: (id) => `/api/order/${id}`,
       providesTags: ["Orders"],
     }),
     getUserOrders: builder.query({
-      query: () => `/order/my-orders`,
+      query: () => `/api/order/my-orders`,
       providesTags: ["Orders"],
     }),
     cancelOrder: builder.mutation({
-      query: (orderId) => ({
-        url: `/order/cancel-order/${orderId}`,
-        method: "PUT",
-        body: { status: "Cancelled" }
+      query: (id) => ({
+        url: `/api/order/update-status/${id}`,
+        method: "PATCH",
+        body: { status: "cancelled" }
       }),
       invalidatesTags: ["Orders"],
     }),
     returnOrder: builder.mutation({
       query: (data) => ({
-        url: `/order/return-order/${data.orderId}`,
-        method: "PUT",
+        url: `/api/order/update-status/${data.orderId}`,
+        method: "PATCH",
         body: { 
-          status: "Return Requested",
-          returnReason: data.reason 
+          status: "Return Requested"
         }
       }),
       invalidatesTags: ["Orders"],

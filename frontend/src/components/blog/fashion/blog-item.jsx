@@ -1,21 +1,12 @@
 import React from "react";
-import Image from "next/image";
-import { Tags } from "@/svg";
 import Link from "next/link";
+import { Tags } from "@/svg";
 
 const BlogItem = ({ blog }) => {
-  const { id,img, date, title, tags } = blog || {};
+  const { id, date, title, tags } = blog || {};
   return (
     <div className="tp-blog-item-2 mb-40">
-      <div className="tp-blog-thumb-2 p-relative fix">
-        <Link href={`/blog-details/${id}`}>
-          <Image src={img} alt="blog img" />
-        </Link>
-        <div className="tp-blog-meta-date-2">
-          <span>{date}</span>
-        </div>
-      </div>
-      <div className="tp-blog-content-2 has-thumbnail">
+      <div className="tp-blog-content-2">
         <div className="tp-blog-meta-2">
           <span>
             <Tags />
@@ -26,6 +17,9 @@ const BlogItem = ({ blog }) => {
               {i < tags.length - 1 && ", "}
             </a>
           ))}
+        </div>
+        <div className="tp-blog-meta-date-2 mb-15">
+          <span>{date}</span>
         </div>
         <h3 className="tp-blog-title-2">
           <Link href={`/blog-details/${id}`}>{title}</Link>

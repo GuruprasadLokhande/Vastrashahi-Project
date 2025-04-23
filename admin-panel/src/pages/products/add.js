@@ -66,6 +66,26 @@ const AddProduct = () => {
     { id: 'green', label: 'Green', code: '#008000' },
     { id: 'black', label: 'Black', code: '#000000' },
     { id: 'white', label: 'White', code: '#FFFFFF' },
+    { id: 'yellow', label: 'Yellow', code: '#FFFF00' },
+    { id: 'purple', label: 'Purple', code: '#800080' },
+    { id: 'pink', label: 'Pink', code: '#FF69B4' },
+    { id: 'orange', label: 'Orange', code: '#FFA500' },
+    { id: 'grey', label: 'Grey', code: '#808080' },
+    { id: 'maroon', label: 'Maroon', code: '#800000' },
+    { id: 'navy', label: 'Navy', code: '#000080' },
+    { id: 'olive', label: 'Olive', code: '#808000' },
+    { id: 'beige', label: 'Beige', code: '#F5F5DC' },
+    { id: 'brown', label: 'Brown', code: '#A52A2A' },
+    { id: 'teal', label: 'Teal', code: '#008080' },
+    { id: 'mustard', label: 'Mustard', code: '#FFDB58' },
+    { id: 'turquoise', label: 'Turquoise', code: '#40E0D0' },
+    { id: 'gold', label: 'Gold', code: '#FFD700' },
+    { id: 'silver', label: 'Silver', code: '#C0C0C0' },
+    { id: 'lavender', label: 'Lavender', code: '#E6E6FA' },
+    { id: 'cream', label: 'Cream', code: '#FFFDD0' },
+    { id: 'peach', label: 'Peach', code: '#FFDAB9' },
+    { id: 'coral', label: 'Coral', code: '#FF7F50' },
+    { id: 'mint', label: 'Mint', code: '#98FB98' }
   ];
 
   // Fetch categories
@@ -163,8 +183,26 @@ const AddProduct = () => {
     const newImages = files.map((file) => ({
       file,
       preview: URL.createObjectURL(file),
+      color: null // Default to no color selected
     }));
     setImages((prev) => [...prev, ...newImages]);
+  };
+
+  // Set color for an image
+  const setImageColor = (index, colorId) => {
+    setImages((prev) => {
+      const updated = [...prev];
+      const selectedColor = availableColors.find(color => color.id === colorId);
+      updated[index] = {
+        ...updated[index],
+        color: selectedColor ? {
+          id: selectedColor.id,
+          name: selectedColor.label, 
+          clrCode: selectedColor.code
+        } : null
+      };
+      return updated;
+    });
   };
 
   // Remove image
@@ -205,9 +243,9 @@ const AddProduct = () => {
     try {
       // Upload images
       const uploadedImages = [];
-      for (const { file } of images) {
+      for (const image of images) {
         const formData = new FormData();
-        formData.append('image', file);
+        formData.append('image', image.file);
         const response = await fetch('/api/cloudinary/add-img', {
           method: 'POST',
           body: formData,
@@ -216,7 +254,7 @@ const AddProduct = () => {
         const result = await response.json();
         if (result.success) {
           uploadedImages.push({
-            color: { name: 'Default', clrCode: '#000000' },
+            color: image.color || { name: 'Default', clrCode: '#000000' },
             img: result.data.url,
             sizes: formData.sizes,
           });
@@ -244,7 +282,8 @@ const AddProduct = () => {
         productType: 'fashion',
         category: {
           name: selectedSubcategory?.name || '',
-          id: selectedParentCategory?._id
+          id: selectedParentCategory?._id,
+          children: [selectedSubcategory?.name || '']
         },
         brand: {
           name: 'Vastrashahi',
@@ -255,6 +294,8 @@ const AddProduct = () => {
         slug: formData.title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-'),
         tags: formData.colors,
         sizes: formData.sizes,
+        gender: selectedParentCategory?.parent?.toLowerCase() === 'men' ? 'men' : 
+               selectedParentCategory?.parent?.toLowerCase() === 'women' ? 'women' : ''
       };
 
       // Submit product
@@ -349,6 +390,28 @@ const AddProduct = () => {
                 min="1"
                 required
               />
+            </div>
+
+            {/* Featured Product Toggle */}
+            <div>
+              <label className="block text-gray-700 font-medium mb-2">
+                Featured Product
+              </label>
+              <div className="flex items-center">
+                <label className="inline-flex relative items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="sr-only peer"
+                    checked={formData.featured}
+                    onChange={() => setFormData(prev => ({ ...prev, featured: !prev.featured }))}
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  <span className="ml-3 text-sm font-medium text-gray-700">
+                    {formData.featured ? 'Yes' : 'No'}
+                  </span>
+                </label>
+              </div>
+              <p className="mt-1 text-sm text-gray-500">Featured products are displayed prominently on the homepage</p>
             </div>
 
             {/* Parent Category */}
@@ -475,19 +538,30 @@ const AddProduct = () => {
 
             {/* Image Previews */}
             {images.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                {images.map(({ preview }, index) => (
-                  <div key={index} className="relative">
-                    <img src={preview} alt={`Preview ${index + 1}`} className="h-32 w-full object-cover rounded-md" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                    >
-                      <FiTrash2 />
-                    </button>
-                  </div>
-                ))}
+              <div className="mt-4">
+                <h4 className="font-medium mb-2">Selected Images</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {images.map((image, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium">Image {index + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <img
+                        src={image.preview}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-32 object-cover mb-2 rounded"
+                      />
+                     
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

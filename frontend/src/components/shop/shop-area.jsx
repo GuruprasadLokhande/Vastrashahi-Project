@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Pagination from "@/ui/Pagination";
 import ProductItem from "../products/fashion/product-item";
 import CategoryFilter from "./shop-filter/category-filter";
@@ -16,6 +16,14 @@ const ShopArea = ({ all_products, products, otherProps }) => {
   const [filteredRows, setFilteredRows] = useState(products);
   const [pageStart, setPageStart] = useState(0);
   const [countOfPage, setCountOfPage] = useState(12);
+
+  // Update filteredRows when products change (when filters are applied)
+  useEffect(() => {
+    setFilteredRows(products);
+    // Reset to first page when filters change
+    setCurrPage(1);
+    setPageStart(0);
+  }, [products, setCurrPage]);
 
   const paginatedData = (items, startPage, pageCount) => {
     setFilteredRows(items);
@@ -42,9 +50,9 @@ const ShopArea = ({ all_products, products, otherProps }) => {
                 {/* status */}
                 <StatusFilter setCurrPage={setCurrPage} />
                 {/* categories */}
-                <CategoryFilter setCurrPage={setCurrPage} />
+                <CategoryFilter setCurrPage={setCurrPage} filteredProducts={products} />
                 {/* color */}
-                <ColorFilter setCurrPage={setCurrPage} />
+                <ColorFilter setCurrPage={setCurrPage} filteredProducts={products} />
                 {/* product rating */}
                 <TopRatedProducts />
                 {/* reset filter */}
@@ -60,12 +68,12 @@ const ShopArea = ({ all_products, products, otherProps }) => {
                         showing={
                           products.length === 0
                             ? 0
-                            : filteredRows.slice(
+                            : Math.min(filteredRows.slice(
                                 pageStart,
                                 pageStart + countOfPage
-                              ).length
+                              ).length, products.length)
                         }
-                        total={all_products.length}
+                        total={products.length}
                       />
                     </div>
                     <div className="col-xl-6">
@@ -73,7 +81,12 @@ const ShopArea = ({ all_products, products, otherProps }) => {
                     </div>
                   </div>
                 </div>
-                {products.length === 0 && <h2>No products found</h2>}
+                {products.length === 0 && (
+                  <div className="text-center py-5">
+                    <h2>No products found</h2>
+                    <p className="mt-2 text-gray-500">Try adjusting your filters to find what you're looking for</p>
+                  </div>
+                )}
                 {products.length > 0 && (
                   <div className="tp-shop-items-wrapper tp-shop-item-primary">
                     <div className="tab-content" id="productTabContent">

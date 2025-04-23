@@ -1,9 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 // internal
-import user from '@assets/img/users/user-11.jpg';
-import signature from '@assets/img/blog/signature/signature.png';
 import { Search } from '@/svg';
 import blogData from '@/data/blog-data';
 
@@ -32,20 +29,12 @@ const BlogSidebar = () => {
           <h3 className="tp-sidebar-widget-title">About me</h3>
           <div className="tp-sidebar-widget-content">
             <div className="tp-sidebar-about">
-              <div className="tp-sidebar-about-thumb mb-25">
-                <a href="#">
-                  <Image src={user} alt="user" />
-                </a>
-              </div>
               <div className="tp-sidebar-about-content">
                 <h3 className="tp-sidebar-about-title">
                   <a href="#">Ravi {"O'Leigh"}</a>
                 </h3>
                 <span className="tp-sidebar-about-designation">Photographer & Blogger</span>
                 <p>Lorem ligula eget dolor. Aenean massa. Cum sociis que penatibus magnis dis parturient</p>
-                <div className="tp-sidebar-about-signature">
-                  <Image src={signature} alt="signature" />
-                </div>
               </div>
             </div>
           </div>
@@ -59,11 +48,6 @@ const BlogSidebar = () => {
             <div className="tp-sidebar-blog-item-wrapper">
               {latest_post.map(b => (
               <div key={b.id} className="tp-sidebar-blog-item d-flex align-items-center">
-                <div className="tp-sidebar-blog-thumb">
-                  <Link href={`/blog-details/${b.id}`}>
-                    <Image src={b.img} alt="blog img" />
-                  </Link>
-                </div>
                 <div className="tp-sidebar-blog-content">
                   <div className="tp-sidebar-blog-meta">
                     <span>{b.date}</span>

@@ -64,25 +64,70 @@ exports.getSingleOrder = async (req, res, next) => {
   }
 };
 
-exports.updateOrderStatus = async (req, res) => {
-  const newStatus = req.body.status;
+// update Order Status
+exports.updateOrderStatus = async (req, res, next) => {
   try {
-    await Order.updateOne(
-      {
-        _id: req.params.id,
-      },
-      {
-        $set: {
-          status: newStatus,
-        },
-      }, { new: true })
+    const order = await Order.findById(req.params.id);
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    // Check if order can be updated to the new status
+    const newStatus = req.body.status?.toLowerCase();
+    const currentStatus = order.status?.toLowerCase();
+
+    if (currentStatus === 'delivered' || currentStatus === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: `Order cannot be updated as it is already ${order.status}`
+      });
+    }
+
+    order.status = newStatus;
+    await order.save();
+
     res.status(200).json({
       success: true,
-      message: 'Status updated successfully',
+      message: `Order ${newStatus} successfully`
     });
   }
   catch (error) {
-    console.log(error);
     next(error)
+  }
+};
+
+// cancel order
+exports.cancelOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    if (order.status === 'delivered' || order.status === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: `Order cannot be cancelled as it is already ${order.status}`
+      });
+    }
+
+    order.status = 'cancelled';
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Order cancelled successfully'
+    });
+  } catch (error) {
+    console.log(error);
+    next(error);
   }
 };

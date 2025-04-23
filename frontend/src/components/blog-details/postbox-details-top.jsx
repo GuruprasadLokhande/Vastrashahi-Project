@@ -1,8 +1,8 @@
 import React from "react";
-import { Comment, Date, UserTwo } from "@/svg";
+import { Date, UserTwo } from "@/svg";
 
 const PostboxDetailsTop = ({blog}) => {
-  const {category,title,date,comments,author} = blog || {};
+  const {category, title, date} = blog || {};
   return ( 
     <div className="tp-postbox-details-top">
       <div className="tp-postbox-details-category">
@@ -16,15 +16,11 @@ const PostboxDetailsTop = ({blog}) => {
       <div className="tp-postbox-details-meta mb-50">
         <span data-meta="author">
           <UserTwo />
-          By <a href="#">{" "}{author}</a>
+          By <a href="#">{" "}Vastrashahi</a>
         </span>
         <span>
           <Date />
           {" "}{date}
-        </span>
-        <span>
-          <Comment />
-          <a href="#">Comments ({comments})</a>
         </span>
       </div>
     </div>

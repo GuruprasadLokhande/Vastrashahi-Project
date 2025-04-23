@@ -1,6 +1,5 @@
 import React from "react";
 import comment_data from "@/data/blog-comment-data";
-import Image from "next/image";
 
 const BlogDetailsComments = () => {
   return (
@@ -8,10 +7,7 @@ const BlogDetailsComments = () => {
       <ul>
         {comment_data.map((comment) => (
           <li key={comment.id}>
-            <div className="tp-postbox-details-comment-box d-sm-flex align-items-start">
-              <div className="tp-postbox-details-comment-thumb">
-                <Image src={comment.user} alt="user img" />
-              </div>
+            <div className="tp-postbox-details-comment-box">
               <div className="tp-postbox-details-comment-content">
                 <div className="tp-postbox-details-comment-top d-flex justify-content-between align-items-start">
                   <div className="tp-postbox-details-comment-avater">
@@ -32,10 +28,7 @@ const BlogDetailsComments = () => {
             {comment.children && (
               <ul className="children">
                 <li>
-                  <div className="tp-postbox-details-comment-box d-sm-flex align-items-start">
-                    <div className="tp-postbox-details-comment-thumb">
-                      <Image src={comment.children.user} alt="user img" />
-                    </div>
+                  <div className="tp-postbox-details-comment-box">
                     <div className="tp-postbox-details-comment-content">
                       <div className="tp-postbox-details-comment-top d-flex justify-content-between align-items-start">
                         <div className="tp-postbox-details-comment-avater">
