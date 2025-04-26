@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 import { useRouter } from "next/router";
 // internal
 import { useGetProductTypeCategoryQuery } from "@/redux/features/categoryApi";
@@ -58,11 +57,6 @@ const HeaderCategory = ({ isCategoryActive, categoryType = "electronics" }) => {
           className="cursor-pointer"
           onClick={() => handleCategoryRoute(item.parent, "parent")}
         >
-          {item.img && (
-            <span>
-              <Image src={item.img} alt="cate img" width={50} height={50} />
-            </span>
-          )}
           {item.parent}
         </a>
 

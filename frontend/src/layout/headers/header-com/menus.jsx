@@ -59,7 +59,7 @@ const Menus = () => {
           {menu.products && (
             <ul className="tp-submenu tp-mega-menu mega-menu-style-2">
               {menu.product_pages.map((p, i) => (
-                <li key={i} className="has-dropdown">
+                <li key={i} className="has-dropdown ">
                   <div className="mega-menu-content">
                     <Link href={p.link} className="mega-menu-title">
                       {p.title}
@@ -72,7 +72,7 @@ const Menus = () => {
                       ))}
                     </ul>
                   </div>
-                  {p.image && (
+                  {/* {p.image && (
                     <div className="tp-mega-menu-img">
                       <Image 
                         src={p.image} 
@@ -82,7 +82,7 @@ const Menus = () => {
                         style={{objectFit: 'cover'}}
                       />
                     </div>
-                  )}
+                  )} */}
                 </li>
               ))}
               <li className="mega-menu-product">

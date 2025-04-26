@@ -1,0 +1,58 @@
+/* Category Menu Fixes */
+
+/* Global fix for all category items */
+.has-dropdown a {
+  display: block !important;
+  width: 100% !important;
+}
+
+/* Desktop Category Menu */
+.tp-category-menu {
+  nav ul li.has-dropdown {
+    a {
+      display: block !important;
+      width: 100% !important;
+      position: relative !important;
+    }
+  }
+}
+
+/* Women category menu fixes */
+.women-category-menu,
+ul.women-menu {
+  li.has-dropdown {
+    a {
+      display: block !important;
+      width: 100% !important;
+    }
+  }
+}
+
+/* Mobile menu fixes */
+.tp-category-mobile-menu {
+  ul li.has-dropdown {
+    a {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      position: relative !important;
+      width: 100% !important;
+    }
+    
+    .dropdown-toggle-btn {
+      margin-left: auto !important;
+      flex-shrink: 0 !important;
+      position: relative !important;
+      z-index: 2 !important;
+    }
+  }
+}
+
+/* Mobile specific fixes */
+@media (max-width: 767px) {
+  .tp-category-mobile-menu ul li.has-dropdown a span {
+    flex-grow: 1 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+} 

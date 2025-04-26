@@ -4,7 +4,10 @@ import ReactModal from "react-modal";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import '../styles/index.scss';
+import '../styles/mobile-fixes.css';
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import FixCategoryImages from "@/components/common/fix-category-images";
+
 if (typeof window !== "undefined") {
   require("bootstrap/dist/js/bootstrap");
 }
@@ -41,6 +44,7 @@ export default function App({ Component, pageProps }) {
         <Elements stripe={stripePromise}>
           <div id="root">
             <Component {...pageProps} />
+            <FixCategoryImages />
           </div>
         </Elements>
       </Provider>

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/router";
 // internal
 import { useGetCategoryByTypeQuery } from "@/redux/features/categoryApi";
@@ -61,15 +60,10 @@ const MobileCategory = ({ isCategoryActive, categoryType }) => {
     const category_items = categories.result;
     content = category_items.map((item) => (
       <li className="has-dropdown" key={item._id}>
-        <a className="cursor-pointer">
-          {item.img && (
-            <span>
-              <Image src={item.img} alt="cate img" width={50} height={50} />
-            </span>
-          )}
-          {item.parent}
+        <a className="cursor-pointer d-flex align-items-center">
+          <span className="flex-grow-1">{item.parent}</span>
           {item.children && (
-            <button onClick={()=> handleOpenSubMenu(item.parent)} className="dropdown-toggle-btn">
+            <button onClick={()=> handleOpenSubMenu(item.parent)} className="dropdown-toggle-btn ms-auto">
               <i className="fa-regular fa-angle-right"></i>
             </button>
           )}

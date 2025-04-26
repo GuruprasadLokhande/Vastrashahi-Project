@@ -1,0 +1,46 @@
+/* Mobile Menu Fixes */
+
+/* Fix container elements */
+.has-dropdown a {
+  display: block !important;
+  width: 100% !important;
+}
+
+/* Fixed positioning for dropdown button in mobile */
+.dropdown-toggle-btn {
+  position: absolute !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 2 !important;
+}
+
+/* Specific fix for offcanvas mobile menu */
+.offcanvas__area .tp-category-mobile-menu ul li.has-dropdown a {
+  display: flex !important;
+  align-items: center !important;
+  position: relative !important;
+  padding-right: 30px !important;
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 767px) {
+  .tp-category-mobile-menu ul li {
+    position: relative !important;
+  }
+  
+  .tp-category-mobile-menu ul li.has-dropdown a {
+    padding: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+  
+  /* Ensure proper text display */
+  .tp-category-mobile-menu ul li.has-dropdown a span {
+    flex-grow: 1 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+} 

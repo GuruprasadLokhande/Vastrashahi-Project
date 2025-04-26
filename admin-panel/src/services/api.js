@@ -218,10 +218,17 @@ export const categoriesAPI = {
   getSubcategories: async (parentId) => {
     try {
       const allCategories = await categoriesAPI.getCategories();
-      return allCategories.filter(cat => 
-        cat.parentCategory === parentId || 
-        (typeof cat.parentCategory === 'object' && cat.parentCategory?._id === parentId)
-      );
+      const parentCategory = allCategories.find(cat => cat._id === parentId);
+      
+      if (parentCategory && Array.isArray(parentCategory.children)) {
+        // Transform children array into subcategory objects
+        return parentCategory.children.map((childName, index) => ({
+          _id: `${parentId}-${index}`,
+          name: childName,
+          parentCategory: parentId
+        }));
+      }
+      return [];
     } catch (error) {
       console.error(`Error fetching subcategories for ${parentId}:`, error);
       return [];
@@ -461,6 +468,26 @@ export const productsAPI = {
     } catch (error) {
       console.error('Error in productsAPI.getCategories:', error);
       throw handleAPIError(error);
+    }
+  },
+
+  getSubcategories: async (parentId) => {
+    try {
+      const allCategories = await categoriesAPI.getCategories();
+      const parentCategory = allCategories.find(cat => cat._id === parentId);
+      
+      if (parentCategory && Array.isArray(parentCategory.children)) {
+        // Transform children array into subcategory objects
+        return parentCategory.children.map((childName, index) => ({
+          _id: `${parentId}-${index}`,
+          name: childName,
+          parentCategory: parentId
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error(`Error fetching subcategories for ${parentId}:`, error);
+      return [];
     }
   },
 };
